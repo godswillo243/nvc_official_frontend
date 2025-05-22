@@ -6,32 +6,27 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  // Dynamically load MDC CSS, icons font, and JS
   useEffect(() => {
-    // Load MDC CSS
     const link = document.createElement('link');
     link.rel = 'stylesheet';
     link.href = 'https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css';
     document.head.appendChild(link);
 
-    // Load Material Icons font
     const icons = document.createElement('link');
     icons.rel = 'stylesheet';
     icons.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
     document.head.appendChild(icons);
 
-    // Load MDC JS
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js';
     script.onload = () => {
-      if (window.mdc) {
-        const MDCTextField = window.mdc.textField.MDCTextField;
+      if (window.mdc && window.mdc.MDCTextField) {
+        const MDCTextField = window.mdc.MDCTextField;
         document.querySelectorAll('.mdc-text-field').forEach((el) => new MDCTextField(el));
       }
     };
     document.body.appendChild(script);
 
-    // Cleanup on unmount
     return () => {
       document.head.removeChild(link);
       document.head.removeChild(icons);
@@ -64,12 +59,10 @@ export default function Login() {
     }
   };
 
-  // Animation timings: stagger each item by 300ms
   const baseDelay = 300;
 
   return (
     <>
-      {/* Inject keyframe styles */}
       <style>{`
         @keyframes slideInBounce {
           0% {
@@ -133,7 +126,6 @@ export default function Login() {
             Welcome Back
           </h2>
 
-          {/* Email */}
           <label
             className="mdc-text-field mdc-text-field--filled"
             style={{
@@ -160,7 +152,6 @@ export default function Login() {
             <span className="mdc-line-ripple"></span>
           </label>
 
-          {/* Password */}
           <label
             className="mdc-text-field mdc-text-field--filled mdc-text-field--with-leading-icon"
             style={{
@@ -189,7 +180,6 @@ export default function Login() {
             <span className="mdc-line-ripple"></span>
           </label>
 
-          {/* Forgot password */}
           <div
             style={{
               textAlign: 'right',
@@ -219,7 +209,6 @@ export default function Login() {
             Log In
           </button>
 
-          {/* Sign up */}
           <p
             style={{
               textAlign: 'center',
