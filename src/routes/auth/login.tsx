@@ -1,79 +1,108 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function LoginRoute() {
-  const [animate, setAnimate] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
+  // Initialize MDC text fields when component mounts
   useEffect(() => {
-    setTimeout(() => setAnimate(true), 100);
+    if (window.mdc) {
+      const MDCTextField = window.mdc.textField.MDCTextField;
+      document.querySelectorAll('.mdc-text-field').forEach((el) => new MDCTextField(el));
+    }
   }, []);
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log({ email, password });
+    // Add your auth logic here
+    navigate('/dashboard');
+  };
+
   return (
-    <div className="flex flex-col justify-center items-center h-full w-full space-y-8">
-      {/* Logo if frontend later needs  to add */}
+    <div
+      style={{
+        display: 'flex',
+        height: '100vh',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f5f5f5',
+        fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+      }}
+    >
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          backgroundColor: 'white',
+          padding: '2rem',
+          borderRadius: '8px',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+          width: '360px',
+        }}
+      >
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Welcome Back</h2>
 
-      {/* Social-style caption */}
-      <h1 className="text-center text-2xl font-semibold text-gray-800">
-        Sign in to continue to{" "}
-        <span className="text-green-600 font-bold tracking-tight">NVC</span>
-      </h1>
-
-      {/* Form card */}
-      <div className="w-full bg-white/90 backdrop-blur-lg shadow-xl rounded-xl p-8 space-y-6">
-        {/* Email Field */}
-        <div
-          className={`transition-all duration-500 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-        >
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Email
-          </label>
+        {/* Email */}
+        <label className="mdc-text-field mdc-text-field--filled" style={{ width: '100%', marginBottom: '1.5rem' }}>
+          <span className="mdc-text-field__ripple"></span>
           <input
+            className="mdc-text-field__input"
             type="email"
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            id="email"
           />
-        </div>
+          <span className="mdc-floating-label" htmlFor="email">
+            Email
+          </span>
+          <span className="mdc-line-ripple"></span>
+        </label>
 
-        {/* Password Field */}
-        <div
-          className={`transition-all duration-500 delay-100 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-        >
-          <label className="block mb-1 text-sm font-medium text-gray-700">
-            Password
-          </label>
+        {/* Password */}
+        <label className="mdc-text-field mdc-text-field--filled mdc-text-field--with-leading-icon" style={{ width: '100%', marginBottom: '0.5rem' }}>
+          <i className="material-icons mdc-text-field__icon" tabIndex="0" role="button">
+            lock
+          </i>
           <input
+            className="mdc-text-field__input"
             type="password"
-            className="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            id="password"
           />
-        </div>
+          <span className="mdc-floating-label" htmlFor="password">
+            Password
+          </span>
+          <span className="mdc-line-ripple"></span>
+        </label>
 
-        {/* Forgot Password */}
-        <div
-          className={`text-right text-sm text-green-700 hover:underline transition-all duration-500 delay-200 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-        >
-          <Link to="/auth/forgot-password">Forgot password?</Link>
-        </div>
-
-        {/* Login Button */}
-        <div
-          className={`transition-all duration-500 delay-300 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-        >
-          <button className="w-full bg-gradient-to-r from-green-500 to-green-700 text-white py-2.5 rounded-full font-semibold hover:opacity-90 hover:shadow-lg transition">
-            Sign In
-          </button>
-        </div>
-
-        {/* Sign up link */}
-        <div
-          className={`text-center text-sm transition-all duration-500 delay-400 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
-        >
-          Don’t have an account?{" "}
-          <Link to="/auth/signup" className="text-green-700 hover:underline font-medium">
-            Sign up
+        {/* Forgot password */}
+        <div style={{ textAlign: 'right', marginBottom: '1.5rem' }}>
+          <Link to="/forgot-password" style={{ color: '#6200ee', textDecoration: 'none' }}>
+            Forgot password?
           </Link>
         </div>
-      </div>
+
+        <button
+          type="submit"
+          className="mdc-button mdc-button--raised"
+          style={{ width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+        >
+          Log In
+        </button>
+
+        {/* Sign up */}
+        <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem' }}>
+          Don’t have an account?{' '}
+          <Link to="/signup" style={{ color: '#6200ee', textDecoration: 'none' }}>
+            Sign up
+          </Link>
+        </p>
+      </form>
     </div>
   );
 }
