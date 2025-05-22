@@ -40,8 +40,8 @@ function App() {
         <Route
           index
           element={
-            <div className="w-screen h-dvh flex-center-column">
-              <h1 className="text-4xl md:text-5xl font-extrabold ">
+            <div className="w-screen h-dvh flex flex-col items-center justify-center text-center space-y-6 px-4">
+              <h1 className="text-4xl md:text-5xl font-extrabold">
                 Welcome to <span className="text-green-700">NVC</span> OFFICIAL
               </h1>
               <Link
