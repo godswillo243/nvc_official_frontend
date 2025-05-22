@@ -1,40 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-export default function LoginRoute() {
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = 'https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css';
-    document.head.appendChild(link);
-
-    const icons = document.createElement('link');
-    icons.rel = 'stylesheet';
-    icons.href = 'https://fonts.googleapis.com/icon?family=Material+Icons';
-    document.head.appendChild(icons);
-
-    const script = document.createElement('script');
-    script.src = 'https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js';
-    script.onload = () => {
-      if (window.mdc && window.mdc.MDCTextField) {
-        const MDCTextField = window.mdc.MDCTextField;
-        document.querySelectorAll('.mdc-text-field').forEach((el) => new MDCTextField(el));
-      }
-    };
-    document.body.appendChild(script);
-
-    return () => {
-      document.head.removeChild(link);
-      document.head.removeChild(icons);
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -163,7 +135,7 @@ export default function LoginRoute() {
               display: 'block',
             }}
           >
-            <i className="material-icons mdc-text-field__icon" tabIndex="0" role="button">
+            <i className="material-icons mdc-text-field__icon" tabIndex={0} role="button">
               lock
             </i>
             <input
