@@ -10,14 +10,7 @@ export default function LoginRoute() {
 
   return (
     <div className="flex flex-col justify-center items-center h-full w-full space-y-8">
-      {/* Logo */}
-      <div className="mb-2">
-        <img
-          src="/logo.png"
-          alt="NVC Logo"
-          className="h-16 w-16 animate-bounce shadow-lg bg-white rounded-full p-1"
-        />
-      </div>
+      {/* Logo if frontend later needs  to add */}
 
       {/* Social-style caption */}
       <h1 className="text-center text-2xl font-semibold text-gray-800">
