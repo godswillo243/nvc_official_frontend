@@ -11,7 +11,7 @@ export default function LoginRoute() {
 
     try {
       const response = await fetch('https://nvc-api.onrender.com/api/login/', {
-        method: 'POST',
+        method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
