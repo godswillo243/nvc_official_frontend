@@ -1,59 +1,164 @@
-import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from 'react';
+import { TextField, Typography, Box, Button, Link, Stack } from '@mui/material';
+import { useAuth } from './authLayout'; // Adjust path as needed
 
-export default function LoginRoute() {
-  const [animate, setAnimate] = useState(false);
+// CSS styles for sliding animation and button shifting
+const styles = {
+  container: {
+    maxWidth: 400,
+    margin: 'auto',
+    marginTop: 64,
+    padding: 32,
+    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+    borderRadius: 12,
+    backgroundColor: 'white',
+  },
+  slideIn: (delay: number) => ({
+    opacity: 0,
+    animation: `slideIn 0.5s ease forwards`,
+    animationDelay: `${delay}s`,
+  }),
+  '@keyframes slideIn': {
+    from: { opacity: 0, transform: 'translateX(-50px)' },
+    to: { opacity: 1, transform: 'translateX(0)' },
+  },
+  gradientButton: {
+    background: 'linear-gradient(45deg, #6a11cb, #2575fc)',
+    color: 'white',
+    fontWeight: 'bold',
+    padding: '10px 30px',
+    borderRadius: 30,
+    textTransform: 'none',
+    boxShadow: '0 3px 15px rgba(101, 49, 255, 0.4)',
+    transition: 'transform 0.3s ease, background 0.3s ease',
+    cursor: 'pointer',
+  },
+  gradientButtonPressedLeft: {
+    transform: 'translateX(-15px)',
+    background: 'linear-gradient(45deg, #2575fc, #6a11cb)',
+  },
+  gradientButtonPressedRight: {
+    transform: 'translateX(15px)',
+    background: 'linear-gradient(45deg, #2575fc, #6a11cb)',
+  },
+};
 
+export const loginRoute: React.FC = () => {
+  const { login, isLoading } = useAuth();
+
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [buttonShift, setButtonShift] = useState<'left' | 'right' | null>(null);
+
+  // Add keyframes to the document stylesheet (since we can't do styled components here)
   useEffect(() => {
-    setTimeout(() => setAnimate(true), 100); // Delay to trigger animations
+    const styleSheet = document.styleSheets[0];
+    if (styleSheet) {
+      const keyframes = 
+        `@keyframes slideIn {
+          from { opacity: 0; transform: translateX(-50px); }
+          to { opacity: 1; transform: translateX(0); }
+        }`;
+      if (![...styleSheet.cssRules].some(rule => rule.name === 'slideIn')) {
+        styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+      }
+    }
   }, []);
 
+  const handleLogin = async () => {
+    setButtonShift('left');
+    try {
+      await login(email, password);
+    } finally {
+      setTimeout(() => setButtonShift(null), 300);
+    }
+  };
+
+  const handleSignUpClick = () => {
+    setButtonShift('right');
+    // Handle signup redirect or logic here
+    setTimeout(() => setButtonShift(null), 300);
+  };
+
   return (
-    <div className="min-h-dvh flex flex-col items-center justify-center bg-gradient-to-br from-green-100 to-green-300 px-4">
-      {/* Logo with animation */}
-      <div className="animate-bounce mb-8">
-        <img src="/logo.png" alt="Logo" className="h-20 w-20" />
-      </div>
+    <Box sx={styles.container}>
+      <Typography
+        variant="h4"
+        component="h1"
+        fontWeight="bold"
+        sx={styles.slideIn(0)}
+        gutterBottom
+        textAlign="center"
+      >
+        Login
+      </Typography>
 
-      {/* Form */}
-      <div className="bg-white shadow-xl rounded-lg p-8 w-full max-w-md space-y-6">
-        <h2 className="text-2xl font-bold text-center text-green-800">Login</h2>
+      <TextField
+        label="Email"
+        type="email"
+        fullWidth
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        disabled={isLoading}
+        sx={styles.slideIn(0.3)}
+        margin="normal"
+      />
 
-        <div className={`transition-all duration-500 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"}`}>
-          <label className="block mb-1 font-medium text-gray-700">Email</label>
-          <input
-            type="email"
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Enter your email"
-          />
-        </div>
+      <TextField
+        label="Password"
+        type="password"
+        fullWidth
+        value={password}
+        onChange={e => setPassword(e.target.value)}
+        disabled={isLoading}
+        sx={styles.slideIn(0.6)}
+        margin="normal"
+      />
 
-        <div className={`transition-all duration-500 delay-100 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"}`}>
-          <label className="block mb-1 font-medium text-gray-700">Password</label>
-          <input
-            type="password"
-            className="w-full border border-gray-300 rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
-            placeholder="Enter your password"
-          />
-        </div>
+      <Box sx={{ textAlign: 'right', mb: 2, ...styles.slideIn(0.9) }}>
+        <Link href="#" underline="hover" fontSize={14}>
+          Forget your password?
+        </Link>
+      </Box>
 
-        <div className={`text-right text-sm text-green-700 hover:underline transition-all duration-500 delay-200 ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"}`}>
-          <Link to="/auth/forgot-password">Forgot your password?</Link>
-        </div>
+      <Stack direction="row" spacing={2} justifyContent="center" sx={styles.slideIn(1.2)}>
+        <Button
+          onClick={handleLogin}
+          disabled={isLoading}
+          sx={{
+            ...styles.gradientButton,
+            ...(buttonShift === 'left' ? styles.gradientButtonPressedLeft : {}),
+            flex: 1,
+          }}
+        >
+          {isLoading ? 'Logging in...' : 'Login'}
+        </Button>
 
-        <div className={`transition-all duration-500 delay-[300ms] ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"}`}>
-          <button className="w-full bg-gradient-to-r from-green-500 to-green-700 text-white py-2 rounded-full font-semibold hover:opacity-90 transition">
-            Login
-          </button>
-        </div>
+        <Button
+          onClick={handleSignUpClick}
+          sx={{
+            ...styles.gradientButton,
+            background: 'linear-gradient(45deg, #ff416c, #ff4b2b)',
+            ...(buttonShift === 'right' ? styles.gradientButtonPressedRight : {}),
+            flex: 1,
+          }}
+        >
+          Sign Up
+        </Button>
+      </Stack>
 
-        <div className={`text-center text-sm transition-all duration-500 delay-[400ms] ${animate ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6"}`}>
-          Don’t have an account?{" "}
-          <Link to="/auth/signup" className="text-green-700 hover:underline font-medium">
-            Sign up
-          </Link>
-        </div>
-      </div>
-    </div>
+      <Typography
+        variant="body2"
+        color="textSecondary"
+        textAlign="center"
+        mt={3}
+        sx={styles.slideIn(1.5)}
+      >
+        Don’t have an account?{' '}
+        <Link href="#" underline="hover" onClick={handleSignUpClick}>
+          Sign Up
+        </Link>
+      </Typography>
+    </Box>
   );
-}
+};
