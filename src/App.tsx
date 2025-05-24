@@ -8,6 +8,7 @@ import {
   RootLayout,
   SignupRoute,
 } from "./routes";
+import { ToastContainer } from "react-toastify";
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -29,6 +30,7 @@ function App() {
 
   return isLoaded ? (
     <>
+      <ToastContainer />
       <Routes>
         <Route path="/auth" element={<AuthLayout />}>
           <Route path="/auth/login" element={<LoginRoute />} />
