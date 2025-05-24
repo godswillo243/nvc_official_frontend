@@ -8,6 +8,7 @@ import {
   RootLayout,
   SignupRoute,
 } from "./routes";
+import { AuthProvider } from "./authContext"; // Make sure path is correct
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -41,44 +42,53 @@ function App() {
   }, [navigate]);
 
   return isLoaded ? (
-    <div
-      className={`transition-opacity duration-700 ease-in-out ${
-        showContent ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <Routes location={location}>
-        <Route path="/auth" element={<AuthLayout />}>
-          <Route path="/auth/login" element={<LoginRoute />} />
-          <Route path="/auth/signup" element={<SignupRoute />} />
-        </Route>
-        <Route path="/" element={<RootLayout />}>
-          <Route path="/home" element={<HomeRoute />} />
-        </Route>
-        <Route
-          index
-          element={
-            <div className="w-screen h-dvh flex flex-col items-center justify-center text-center space-y-6 px-4">
-              <h1 className="text-4xl md:text-5xl font-extrabold">
-                Welcome to <span className="text-green-700">NVC</span> OFFICIAL
-              </h1>
-              <Link
-                to={"/auth/login"}
-                className="bg-primary px-6 py-2 rounded-full text-primary-foreground font-semibold"
-              >
-                Get Started
-              </Link>
-            </div>
-          }
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </div>
+    <AuthProvider>
+      <div
+        className={`transition-opacity duration-700 ease-in-out ${
+          showContent ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <Routes location={location}>
+          <Route path="/auth" element={<AuthLayout />}>
+            <Route path="login" element={<LoginRoute />} />
+            <Route path="signup" element={<SignupRoute />} />
+          </Route>
+
+          <Route path="/" element={<RootLayout />}>
+            <Route path="home" element={<HomeRoute />} />
+          </Route>
+
+          <Route
+            index
+            element={
+              <div className="w-screen h-dvh flex flex-col items-center justify-center text-center space-y-6 px-4">
+                <h1 className="text-4xl md:text-5xl font-extrabold">
+                  Welcome to <span className="text-green-700">NVC</span> OFFICIAL
+                </h1>
+                <Link
+                  to={"/auth/login"}
+                  className="bg-primary px-6 py-2 rounded-full text-primary-foreground font-semibold"
+                >
+                  Get Started
+                </Link>
+              </div>
+            }
+          />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </AuthProvider>
   ) : (
     <div
       id="splash"
       className="max-w-screen max-h-dvh overflow-hidden flex items-center justify-center bg-white"
     >
-      <img src="/splash.jpg" className="h-96 w-96 animate-fade-in" alt="Splash Screen" />
+      <img
+        src="/splash.jpg"
+        className="h-96 w-96 animate-fade-in"
+        alt="Splash Screen"
+      />
     </div>
   );
 }
