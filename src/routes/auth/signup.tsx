@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function signup() {
+export default function Signup() {
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -18,12 +18,8 @@ export default function signup() {
     }));
   };
 
-  // Helper: create username from fullname
   const createUserRoute = (fullname: string) => {
-    return fullname
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "-"); // replace spaces with dashes
+    return fullname.trim().toLowerCase().replace(/\s+/g, "-");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -47,7 +43,6 @@ export default function signup() {
       const data = await response.json();
       alert("Registration successful!");
       console.log(data);
-      // Optionally clear form or redirect
     } catch (error) {
       alert("Error during registration.");
       console.error(error);
@@ -57,94 +52,44 @@ export default function signup() {
   };
 
   return (
-    <div
-      className="min-h-screen flex justify-center items-center bg-gradient-to-br from-[#1e3c72] to-[#2a5298] px-4"
-      style={{ fontFamily: "'Roboto', sans-serif" }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700 px-4 font-sans">
       <form
         onSubmit={handleSubmit}
-        className="bg-black bg-opacity-70 text-white rounded-lg shadow-lg p-8 max-w-md w-full
-                   animate-fadeIn"
+        className="bg-gray-900 bg-opacity-80 text-white rounded-lg shadow-lg p-8 w-full max-w-md animate-fadeIn"
       >
         <h2 className="text-2xl font-semibold text-center mb-6">Create Account</h2>
 
-        <label htmlFor="fullname" className="block text-sm mb-1">
-          Full Name
-        </label>
-        <input
-          type="text"
-          id="fullname"
-          name="fullname"
-          required
-          value={formData.fullname}
-          onChange={handleChange}
-          className="w-full mb-5 px-3 py-2 rounded-md bg-[#333] text-white border border-gray-600
-                     focus:border-green-500 outline-none transition"
-        />
-
-        <label htmlFor="email" className="block text-sm mb-1">
-          Email
-        </label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full mb-5 px-3 py-2 rounded-md bg-[#333] text-white border border-gray-600
-                     focus:border-green-500 outline-none transition"
-        />
-
-        <label htmlFor="phone" className="block text-sm mb-1">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          required
-          value={formData.phone}
-          onChange={handleChange}
-          className="w-full mb-5 px-3 py-2 rounded-md bg-[#333] text-white border border-gray-600
-                     focus:border-green-500 outline-none transition"
-        />
-
-        <label htmlFor="nin" className="block text-sm mb-1">
-          Nigerian NIN
-        </label>
-        <input
-          type="text"
-          id="nin"
-          name="nin"
-          pattern="\d{11}"
-          title="NIN must be 11 digits"
-          required
-          value={formData.nin}
-          onChange={handleChange}
-          className="w-full mb-5 px-3 py-2 rounded-md bg-[#333] text-white border border-gray-600
-                     focus:border-green-500 outline-none transition"
-        />
-
-        <label htmlFor="password" className="block text-sm mb-1">
-          Password
-        </label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          required
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full mb-6 px-3 py-2 rounded-md bg-[#333] text-white border border-gray-600
-                     focus:border-green-500 outline-none transition"
-        />
+        {[
+          { label: "Full Name", name: "fullname", type: "text" },
+          { label: "Email", name: "email", type: "email" },
+          { label: "Phone Number", name: "phone", type: "tel" },
+          {
+            label: "Nigerian NIN",
+            name: "nin",
+            type: "text",
+            pattern: "\\d{11}",
+            title: "NIN must be 11 digits",
+          },
+          { label: "Password", name: "password", type: "password" },
+        ].map((field, index) => (
+          <div key={index} className="mb-5">
+            <label htmlFor={field.name} className="block text-sm mb-1">
+              {field.label}
+            </label>
+            <input
+              {...field}
+              required
+              value={formData[field.name as keyof typeof formData]}
+              onChange={handleChange}
+              className="w-full px-3 py-2 rounded-md bg-gray-800 text-white border border-gray-600 focus:border-green-500 focus:ring-2 focus:ring-green-500 outline-none transition"
+            />
+          </div>
+        ))}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3 bg-green-600 rounded-md font-semibold hover:bg-green-700
-                     transition disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full py-3 bg-green-600 rounded-md font-semibold hover:bg-green-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? "Registering..." : "Register"}
         </button>
@@ -153,8 +98,8 @@ export default function signup() {
       <style>
         {`
           @keyframes fadeIn {
-            from {opacity: 0; transform: translateY(20px);}
-            to {opacity: 1; transform: translateY(0);}
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
           }
           .animate-fadeIn {
             animation: fadeIn 0.8s ease-out forwards;
