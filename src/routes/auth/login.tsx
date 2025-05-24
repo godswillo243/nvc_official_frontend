@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Typography, Box, Button, Link, Stack } from '@mui/material';
-import { useAuth } from './authLayout'; // Adjust path as needed
+import { useAuth } from '../context/authContext'; // Adjust path as needed
 
 // CSS styles for sliding animation and button shifting
 const styles = {
