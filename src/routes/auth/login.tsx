@@ -1,69 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Typography, Box, Button, Link, Stack } from '@mui/material';
-import { useAuth } from '../context/authContext'; // Adjust path as needed
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/authContext'; // Adjust path if needed
 
-// CSS styles for sliding animation and button shifting
-const styles = {
-  container: {
-    maxWidth: 400,
-    margin: 'auto',
-    marginTop: 64,
-    padding: 32,
-    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-    borderRadius: 12,
-    backgroundColor: 'white',
-  },
-  slideIn: (delay: number) => ({
-    opacity: 0,
-    animation: `slideIn 0.5s ease forwards`,
-    animationDelay: `${delay}s`,
-  }),
-  '@keyframes slideIn': {
-    from: { opacity: 0, transform: 'translateX(-50px)' },
-    to: { opacity: 1, transform: 'translateX(0)' },
-  },
-  gradientButton: {
-    background: 'linear-gradient(45deg, #6a11cb, #2575fc)',
-    color: 'white',
-    fontWeight: 'bold',
-    padding: '10px 30px',
-    borderRadius: 30,
-    textTransform: 'none',
-    boxShadow: '0 3px 15px rgba(101, 49, 255, 0.4)',
-    transition: 'transform 0.3s ease, background 0.3s ease',
-    cursor: 'pointer',
-  },
-  gradientButtonPressedLeft: {
-    transform: 'translateX(-15px)',
-    background: 'linear-gradient(45deg, #2575fc, #6a11cb)',
-  },
-  gradientButtonPressedRight: {
-    transform: 'translateX(15px)',
-    background: 'linear-gradient(45deg, #2575fc, #6a11cb)',
-  },
-};
-
-export const loginRoute: React.FC = () => {
+export default function LoginRoute() {
   const { login, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [buttonShift, setButtonShift] = useState<'left' | 'right' | null>(null);
 
-  // Add keyframes to the document stylesheet (since we can't do styled components here)
   useEffect(() => {
-    const styleSheet = document.styleSheets[0];
-    if (styleSheet) {
-      const keyframes = 
-        `@keyframes slideIn {
-          from { opacity: 0; transform: translateX(-50px); }
-          to { opacity: 1; transform: translateX(0); }
-        }`;
-      if (![...styleSheet.cssRules].some(rule => rule.name === 'slideIn')) {
-        styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes slideIn {
+        0% { opacity: 0; transform: translateX(-50px); }
+        100% { opacity: 1; transform: translateX(0); }
       }
-    }
+    `;
+    document.head.appendChild(style);
+    return () => document.head.removeChild(style);
   }, []);
+
+  const slideIn = (delay: number) => ({
+    animation: `slideIn 0.5s ease forwards`,
+    animationDelay: `${delay}s`,
+    opacity: 0,
+  });
 
   const handleLogin = async () => {
     setButtonShift('left');
@@ -76,89 +39,69 @@ export const loginRoute: React.FC = () => {
 
   const handleSignUpClick = () => {
     setButtonShift('right');
-    // Handle signup redirect or logic here
-    setTimeout(() => setButtonShift(null), 300);
+    setTimeout(() => {
+      setButtonShift(null);
+      navigate('/signup');
+    }, 300);
   };
 
   return (
-    <Box sx={styles.container}>
-      <Typography
-        variant="h4"
-        component="h1"
-        fontWeight="bold"
-        sx={styles.slideIn(0)}
-        gutterBottom
-        textAlign="center"
-      >
+    <div className="max-w-md mx-auto mt-16 p-8 bg-white rounded-xl shadow-lg">
+      <h1 className="text-3xl font-bold text-center mb-6" style={slideIn(0)}>
         Login
-      </Typography>
+      </h1>
 
-      <TextField
-        label="Email"
+      <input
         type="email"
-        fullWidth
+        placeholder="Email"
         value={email}
+        disabled={isLoading}
         onChange={e => setEmail(e.target.value)}
-        disabled={isLoading}
-        sx={styles.slideIn(0.3)}
-        margin="normal"
+        className="w-full mb-4 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        style={slideIn(0.3)}
       />
 
-      <TextField
-        label="Password"
+      <input
         type="password"
-        fullWidth
+        placeholder="Password"
         value={password}
-        onChange={e => setPassword(e.target.value)}
         disabled={isLoading}
-        sx={styles.slideIn(0.6)}
-        margin="normal"
+        onChange={e => setPassword(e.target.value)}
+        className="w-full mb-2 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        style={slideIn(0.6)}
       />
 
-      <Box sx={{ textAlign: 'right', mb: 2, ...styles.slideIn(0.9) }}>
-        <Link href="#" underline="hover" fontSize={14}>
-          Forget your password?
-        </Link>
-      </Box>
+      <div className="text-right mb-4 text-sm text-blue-600 hover:underline" style={slideIn(0.9)}>
+        <a href="#">Forget your password?</a>
+      </div>
 
-      <Stack direction="row" spacing={2} justifyContent="center" sx={styles.slideIn(1.2)}>
-        <Button
+      <div className="flex gap-4 justify-center" style={slideIn(1.2)}>
+        <button
           onClick={handleLogin}
           disabled={isLoading}
-          sx={{
-            ...styles.gradientButton,
-            ...(buttonShift === 'left' ? styles.gradientButtonPressedLeft : {}),
-            flex: 1,
-          }}
+          className={`flex-1 py-2 px-4 text-white font-semibold rounded-full transition-all duration-300 shadow-md bg-gradient-to-r from-indigo-500 to-blue-500 ${
+            buttonShift === 'left' ? 'transform -translate-x-3 bg-gradient-to-r from-blue-500 to-indigo-500' : ''
+          }`}
         >
           {isLoading ? 'Logging in...' : 'Login'}
-        </Button>
+        </button>
 
-        <Button
+        <button
           onClick={handleSignUpClick}
-          sx={{
-            ...styles.gradientButton,
-            background: 'linear-gradient(45deg, #ff416c, #ff4b2b)',
-            ...(buttonShift === 'right' ? styles.gradientButtonPressedRight : {}),
-            flex: 1,
-          }}
+          className={`flex-1 py-2 px-4 text-white font-semibold rounded-full transition-all duration-300 shadow-md bg-gradient-to-r from-pink-500 to-orange-500 ${
+            buttonShift === 'right' ? 'transform translate-x-3 bg-gradient-to-r from-orange-500 to-pink-500' : ''
+          }`}
         >
           Sign Up
-        </Button>
-      </Stack>
+        </button>
+      </div>
 
-      <Typography
-        variant="body2"
-        color="textSecondary"
-        textAlign="center"
-        mt={3}
-        sx={styles.slideIn(1.5)}
-      >
+      <p className="text-center text-sm text-gray-600 mt-6" style={slideIn(1.5)}>
         Don’t have an account?{' '}
-        <Link href="#" underline="hover" onClick={handleSignUpClick}>
+        <button onClick={handleSignUpClick} className="text-blue-500 hover:underline">
           Sign Up
-        </Link>
-      </Typography>
-    </Box>
+        </button>
+      </p>
+    </div>
   );
-};
+}
