@@ -9,7 +9,7 @@ import type { ReactNode } from 'react';
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,26 +27,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, []);
 
-  // Simulated login function (replace with real API call)
-  const login = async (username: string, password: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Replace with real API request
-      const response = await fetch('/api/login', {
+      const response = await fetch('https://nvc-api.onrender.com/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) throw new Error('Login failed');
 
       const data = await response.json();
-      localStorage.setItem('token', data.token); // Store the token
+      localStorage.setItem('token', data.jwt); // Store JWT token
       setIsAuthenticated(true);
     } catch (error) {
       console.error('Login error:', error);
       setIsAuthenticated(false);
-      // Optionally display error to user
     } finally {
       setIsLoading(false);
     }
