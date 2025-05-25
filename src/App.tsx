@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import NotFound from "./routes/custom/notFound";
 import {
   AuthLayout,
   HomeRoute,
+  LandingRoute,
   LoginRoute,
   RootLayout,
   SignupRoute,
@@ -12,21 +13,23 @@ import { ToastContainer } from "react-toastify";
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const loaded = !!sessionStorage.getItem("loaded");
     if (loaded) {
       setIsLoaded(true);
       return;
-    } else {
-      setIsLoaded(false);
     }
+
     const splashTimeout = setTimeout(() => {
       setIsLoaded(true);
       sessionStorage.setItem("loaded", "yes");
+      setTimeout(() => {}, 300);
     }, 4000);
+
     return () => clearTimeout(splashTimeout);
-  }, []);
+  }, [navigate]);
 
   return isLoaded ? (
     <>
@@ -39,31 +42,20 @@ function App() {
         <Route path="/" element={<RootLayout />}>
           <Route path="/home" element={<HomeRoute />} />
         </Route>
-        <Route
-          index
-          element={
-            <div className="w-screen h-dvh flex-center-column">
-              <h1 className="text-4xl md:text-5xl font-extrabold ">
-                Welcome to <span className="text-green-700">NVC</span> OFFICIAL
-              </h1>
-              <Link
-                to={"/auth/login"}
-                className="bg-primary px-6 py-2 rounded-full text-primary-foreground font-semibold"
-              >
-                Get Started
-              </Link>
-            </div>
-          }
-        />
+        <Route index element={<LandingRoute />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   ) : (
     <div
       id="splash"
-      className="max-w-screen max-h-dvh overflow-hidden flex items-center justify-center"
+      className="max-w-screen max-h-dvh overflow-hidden flex items-center justify-center bg-white"
     >
-      <img src="/splash.jpg" className="h-96 w-96" alt="" />
+      <img
+        src="/splash.jpg"
+        className="h-96 w-96 animate-fade-in"
+        alt="Splash Screen"
+      />
     </div>
   );
 }

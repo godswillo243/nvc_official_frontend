@@ -1,63 +1,85 @@
+import { useState, type FormEvent } from "react";
+import { useLogin } from "../../lib/react-query/mutations";
+import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
 function Login() {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const { mutate: login, isPending } = useLogin();
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const name = e.target.name;
+    const value = e.target.value;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    // if (!form.email || !form.password) {
+    //   toast.error("Please fill in all fields.");
+    //   return;
+    // }
+    console.log(form)
+
+    login(form, {
+      onError(error) {
+        console.log(error);
+      },
+      onSuccess(data) {
+        console.log(data);
+        toast.success("User registered successfully!");
+        setForm({
+          email: "",
+          password: "",
+        });
+      },
+    });
+  }
+
   return (
-    <div className="flex-center-column max-h-full max-w-full overflow-hidden gap-4 p-4 w-full">
-      <h1 className="text-4xl font-bold text-foreground text-center">
-        L<span className="text-primary">o</span>gin
-      </h1>
-      <form className="flex flex-col gap-6 bg-primary/10 backdrop-blur-2xl p-4 rounded-md shadow-md m-auto w-[min(100%,400px)] max-w-sm">
-        <div className="flex flex-col gap-2">
-          <label
-            className="text-lg font-semibold uppercase text-foreground "
-            htmlFor="email"
-          >
-            Email:
-          </label>
+    <div className="form-container">
+      <h2>Login</h2>
+      <form id="registrationForm" onSubmit={(e) => handleSubmit(e)}>
+        <div className="form-group">
+          <label htmlFor="email">Email Address</label>
           <input
             type="email"
             id="email"
             name="email"
             required
-            className="bg-white outline-0 p-2 rounded"
+            onChange={(e) => handleChange(e)}
+            value={form.email}
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <label
-            className="text-lg font-semibold uppercase text-foreground "
-            htmlFor="password"
-          >
-            Password:
-          </label>
+
+        <div className="form-group">
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
             name="password"
+            minLength={8}
             required
-            className="bg-white outline-0 p-2 rounded"
+            onChange={(e) => handleChange(e)}
+            value={form.password}
+            placeholder="At least 8 characters"
           />
         </div>
-        <div className="flex justify-between items-center">
-          <a
-            href="#"
-            className="text-sm underline text-blue-600  cursor-pointer"
-          >
-            Forgot Password
-          </a>
-        </div>
-        <button type="submit" className="btn">
-          Login
+
+        <button type="submit" disabled={isPending}>
+          {isPending ? "Logging in" : "Login"}
         </button>
-        <p className="text-sm text-center text-foreground flex-center gap-2">
-          Don't have an account?
-          <Link
-            to="/auth/signup"
-            className="text-sm underline text-blue-600  cursor-pointer"
-          >
-            Sign Up
-          </Link>
-        </p>
       </form>
+      <p className="text-center mt-4  text-gray-800">
+        Don't have an account?{" "}
+        <Link to="/auth/signup" className="text-blue-500 hover:underline">
+          Sign up
+        </Link>
+      </p>
     </div>
   );
 }

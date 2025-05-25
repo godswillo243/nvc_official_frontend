@@ -11,3 +11,4 @@ export { default as HomeRoute } from "./root/home";
 
 // Custom routes
 export { default as NotFoundRoute } from "./custom/notFound";
+export { default as LandingRoute } from "./custom/landing";

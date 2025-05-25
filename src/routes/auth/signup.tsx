@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useSignup } from "../../lib/react-query/mutations";
-// import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 function Signup() {
   const [form, setForm] = useState({
@@ -12,8 +12,6 @@ function Signup() {
     phone_number: "",
   });
 
-
-
   const { mutate: signup, isPending } = useSignup();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -22,10 +20,19 @@ function Signup() {
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
-  console.log(form);
-
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (
+      !form.name ||
+      !form.email ||
+      !form.password ||
+      !form.nin ||
+      !form.phone_number
+    ) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
     signup(form, {
       onError(error) {
         console.log(error);
@@ -117,6 +124,12 @@ function Signup() {
           {isPending ? "Creating Account..." : "Create Account"}
         </button>
       </form>
+      <p className="text-center mt-4  text-gray-800">
+        Already have an account?{" "}
+        <Link to="/auth/login" className="text-blue-500 hover:underline">
+          Login
+        </Link>
+      </p>
     </div>
   );
 }
