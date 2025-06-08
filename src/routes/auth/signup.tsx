@@ -46,7 +46,7 @@ function Signup() {
       return;
     }
 
-    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;Add commentMore actions
+    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;
    
 
     const payload = {
