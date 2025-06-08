@@ -103,7 +103,6 @@ function Signup() {
             type="text"
             id="nin"
             name="nin"
-            maxLength={11}
             onChange={handleChange}
             value={form.nin}
             placeholder="11-digit NIN"
