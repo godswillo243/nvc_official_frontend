@@ -33,24 +33,23 @@ function Signup() {
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match.");
+      toast.error("Passwords do not match. Please make sure both password fields are identical.");
       return;
     }
 
     if (nin && nin.length !== 11) {
-      toast.error("NIN must be exactly 11 digits.");
+      toast.error("If provided, NIN must be exactly 11 digits.");
       return;
     }
 
-    // Prepare payload (excluding confirmPassword)
     const payload = { name, email, password, phone_number, nin };
 
     signup(payload, {
       onError(error: any) {
-        toast.error(error?.message || "Signup failed.");
+        toast.error(error?.message || "Signup failed. Please try again.");
       },
       onSuccess() {
-        toast.success("User registered successfully!");
+        toast.success("User registered successfully! Redirecting to login...");
         setTimeout(() => {
           navigate("/auth/login");
         }, 1000);
