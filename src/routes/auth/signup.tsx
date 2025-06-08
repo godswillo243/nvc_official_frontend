@@ -46,20 +46,15 @@ function Signup() {
       return;
     }
 
-    if (trimmedNin === "") {
-      // Update form.nin state to "***********"
-      setForm((prev) => ({ ...prev, nin: "***********" }));
-      nin = "***********";
-    } else {
-      nin = trimmedNin;
-    }
+    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;Add commentMore actions
+   
 
     const payload = {
       name,
       email,
       password,
       phone_number,
-      nin,
+      nin: safeNin,
     };
 
     signup(payload, {
