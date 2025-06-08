@@ -37,12 +37,24 @@ function Signup() {
       return;
     }
 
-    if (nin.length > 1 && nin.length !== 11) {
+    const trimmedNin = nin.trim();
+
+    // Validate only if user entered a NIN
+    if (trimmedNin && trimmedNin.length !== 11) {
       toast.error("If provided, NIN must be exactly 11 digits.");
       return;
     }
 
-    const payload = { name, email, password, phone_number, nin };
+    // Use *********** if NIN is not provided
+    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;
+
+    const payload = {
+      name,
+      email,
+      password,
+      phone_number,
+      nin: safeNin,
+    };
 
     signup(payload, {
       onError(error: any) {
@@ -106,6 +118,8 @@ function Signup() {
             onChange={handleChange}
             value={form.nin}
             placeholder="11-digit NIN"
+            maxLength={11}
+            pattern="\d*"
           />
         </div>
 
