@@ -118,7 +118,6 @@ function Signup() {
             onChange={handleChange}
             value={form.nin}
             placeholder="11-digit NIN"
-            maxLength={11}
             pattern="\d*"
           />
         </div>
