@@ -24,7 +24,7 @@ function Signup() {
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    const { name, email, password, confirmPassword, phone_number, nin } = form;
+    let { name, email, password, confirmPassword, phone_number, nin } = form;
 
     // Basic validation
     if (!name || !email || !password || !confirmPassword || !phone_number) {
@@ -33,27 +33,33 @@ function Signup() {
     }
 
     if (password !== confirmPassword) {
-      toast.error("Passwords do not match. Please make sure both password fields are identical.");
+      toast.error(
+        "Passwords do not match. Please make sure both password fields are identical."
+      );
       return;
     }
 
     const trimmedNin = nin.trim();
 
-    // Validate only if user entered a NIN
     if (trimmedNin && trimmedNin.length !== 11) {
       toast.error("If provided, NIN must be exactly 11 digits.");
       return;
     }
 
-    // Use *********** if NIN is not provided
-    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;
+    if (trimmedNin === "") {
+      // Update form.nin state to "***********"
+      setForm((prev) => ({ ...prev, nin: "***********" }));
+      nin = "***********";
+    } else {
+      nin = trimmedNin;
+    }
 
     const payload = {
       name,
       email,
       password,
       phone_number,
-      nin: safeNin,
+      nin,
     };
 
     signup(payload, {
