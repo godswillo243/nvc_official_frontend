@@ -1,52 +1,59 @@
 import { useState, type FormEvent } from "react";
 import { useSignup } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 function Signup() {
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
+    confirmPassword: "",
     nin: "",
     phone_number: "",
   });
 
   const { mutate: signup, isPending } = useSignup();
+  const navigate = useNavigate();
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const name = e.target.name;
-    const value = e.target.value;
+    const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (
-      !form.name ||
-      !form.email ||
-      !form.password ||
-      !form.nin ||
-      !form.phone_number
-    ) {
-      toast.error("Please fill in all fields.");
+
+    const { name, email, password, confirmPassword, phone_number, nin } = form;
+
+    // Basic validation
+    if (!name || !email || !password || !confirmPassword || !phone_number) {
+      toast.error("Please fill in all required fields.");
       return;
     }
 
-    signup(form, {
-      onError(error) {
-        console.log(error);
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (nin && nin.length !== 11) {
+      toast.error("NIN must be exactly 11 digits.");
+      return;
+    }
+
+    // Prepare payload (excluding confirmPassword)
+    const payload = { name, email, password, phone_number, nin };
+
+    signup(payload, {
+      onError(error: any) {
+        toast.error(error?.message || "Signup failed.");
       },
-      onSuccess(data) {
-        console.log(data);
+      onSuccess() {
         toast.success("User registered successfully!");
-        setForm({
-          email: "",
-          name: "",
-          nin: "",
-          password: "",
-          phone_number: "",
-        });
+        setTimeout(() => {
+          navigate("/auth/login");
+        }, 1000);
       },
     });
   }
@@ -54,7 +61,7 @@ function Signup() {
   return (
     <div className="form-container">
       <h2>Register</h2>
-      <form id="registrationForm" onSubmit={(e) => handleSubmit(e)}>
+      <form id="registrationForm" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="name">Full Name</label>
           <input
@@ -62,7 +69,7 @@ function Signup() {
             id="name"
             name="name"
             required
-            onChange={(e) => handleChange(e)}
+            onChange={handleChange}
             value={form.name}
           />
         </div>
@@ -74,7 +81,7 @@ function Signup() {
             id="email"
             name="email"
             required
-            onChange={(e) => handleChange(e)}
+            onChange={handleChange}
             value={form.email}
           />
         </div>
@@ -86,21 +93,19 @@ function Signup() {
             id="phone_number"
             name="phone_number"
             required
-            onChange={(e) => handleChange(e)}
+            onChange={handleChange}
             value={form.phone_number}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="nin">Nigerian NIN</label>
+          <label htmlFor="nin">Nigerian NIN (optional)</label>
           <input
             type="text"
             id="nin"
             name="nin"
-            pattern="\d{11}"
             maxLength={11}
-            required
-            onChange={(e) => handleChange(e)}
+            onChange={handleChange}
             value={form.nin}
             placeholder="11-digit NIN"
           />
@@ -114,9 +119,22 @@ function Signup() {
             name="password"
             minLength={8}
             required
-            onChange={(e) => handleChange(e)}
+            onChange={handleChange}
             value={form.password}
             placeholder="At least 8 characters"
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            required
+            onChange={handleChange}
+            value={form.confirmPassword}
+            placeholder="Re-enter your password"
           />
         </div>
 
@@ -124,7 +142,8 @@ function Signup() {
           {isPending ? "Creating Account..." : "Create Account"}
         </button>
       </form>
-      <p className="text-center mt-4  text-gray-800">
+
+      <p className="text-center mt-4 text-gray-800">
         Already have an account?{" "}
         <Link to="/auth/login" className="text-blue-500 hover:underline">
           Login
