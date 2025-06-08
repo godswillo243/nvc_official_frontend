@@ -15,9 +15,7 @@ export async function signup(data: {
     nin: data.nin.trim(),
   };
 
-  if (!/^\d{11}$/.test(formData.nin)) {
-    throw new Error("NIN must be exactly 11 digits.");
-  }
+  
 
   try {
     const response = await fetch("https://nvc-api.onrender.com/users/", {
