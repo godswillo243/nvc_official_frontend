@@ -37,7 +37,7 @@ function Signup() {
       return;
     }
 
-    if (nin && nin.length !== 11) {
+    if (nin.lenght>1 && nin.length !== 11) {
       toast.error("If provided, NIN must be exactly 11 digits.");
       return;
     }
