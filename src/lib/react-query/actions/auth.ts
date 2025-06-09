@@ -4,7 +4,7 @@ const API_BASE_URL = "https://nvc-api.onrender.com/users";
 const TOKEN_KEY = "nvc_auth_token";
 const REFRESH_TOKEN_KEY = "nvc_refresh_token";
 
-interface UserSignupData {
+export interface UserSignupData {
   name: string;
   email: string;
   password: string;
@@ -12,12 +12,12 @@ interface UserSignupData {
   phone_number: string;
 }
 
-interface UserLoginData {
+export interface UserLoginData {
   email: string;
   password: string;
 }
 
-interface AuthResponse {
+export interface AuthResponse {
   token: string;
   refresh_token?: string;
   user?: {
@@ -27,7 +27,7 @@ interface AuthResponse {
   };
 }
 
-interface ApiError {
+export interface ApiError {
   message: string;
   status?: number;
   details?: any;
