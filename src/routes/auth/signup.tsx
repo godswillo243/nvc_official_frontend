@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, useEffect } from "react";
 import { useSignup } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
+import { validateEmail, validatePhoneNumber, validatePassword } from "../../utils/validators";
 
 function Signup() {
   const [form, setForm] = useState({
@@ -12,152 +13,179 @@ function Signup() {
     nin: "",
     phone_number: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
   const { mutate: signup, isPending } = useSignup();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    // Validate form on change
+    const errors: Record<string, string> = {};
+
+    if (touchedFields.name && !form.name.trim()) {
+      errors.name = "Full name is required";
+    }
+
+    if (touchedFields.email) {
+      if (!form.email) {
+        errors.email = "Email is required";
+      } else if (!validateEmail(form.email)) {
+        errors.email = "Please enter a valid email address";
+      }
+    }
+
+    if (touchedFields.phone_number) {
+      if (!form.phone_number) {
+        errors.phone_number = "Phone number is required";
+      } else if (!validatePhoneNumber(form.phone_number)) {
+        errors.phone_number = "Please enter a valid phone number";
+      }
+    }
+
+    if (touchedFields.nin && form.nin && form.nin.length !== 11) {
+      errors.nin = "NIN must be exactly 11 digits";
+    }
+
+    if (touchedFields.password) {
+      if (!form.password) {
+        errors.password = "Password is required";
+      } else if (!validatePassword(form.password)) {
+        errors.password = "Password must be at least 8 characters";
+      }
+    }
+
+    if (touchedFields.confirmPassword && form.password !== form.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+    }
+
+    setFormErrors(errors);
+  }, [form, touchedFields]);
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setTouchedFields((prev) => ({ ...prev, [name]: true }));
+  }
+
+  function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
+    const { name } = e.target;
+    setTouchedFields((prev) => ({ ...prev, [name]: true }));
   }
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    let { name, email, password, confirmPassword, phone_number, nin } = form;
+    // Mark all fields as touched to show all possible errors
+    setTouchedFields({
+      name: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+      phone_number: true,
+      nin: true,
+    });
 
-    // Basic validation
-    if (!name || !email || !password || !confirmPassword || !phone_number) {
-      toast.error("Please fill in all required fields.");
+    // Check if there are any errors
+    if (Object.keys(formErrors).length > 0) {
+      toast.error("Please fix the errors in the form");
       return;
     }
 
-    if (password !== confirmPassword) {
-      toast.error(
-        "Passwords do not match. Please make sure both password fields are identical."
-      );
-      return;
-    }
-
-    const trimmedNin = nin.trim();
-
-    if (trimmedNin && trimmedNin.length !== 11) {
-      toast.error("If provided, NIN must be exactly 11 digits.");
-      return;
-    }
-
-    const safeNin = trimmedNin === "" ? "***********" : trimmedNin;
-   
+    const { name, email, password, phone_number, nin } = form;
 
     const payload = {
-      name,
-      email,
+      name: name.trim(),
+      email: email.trim(),
       password,
-      phone_number,
-      nin: safeNin,
+      phone_number: phone_number.trim(),
+      nin: nin.trim() || "***********", // Default value if not provided
     };
 
     signup(payload, {
       onError(error: any) {
-        toast.error(error?.message || "Signup failed. Please try again.");
+        toast.error(
+          error?.response?.data?.message || 
+          error?.message || 
+          "Signup failed. Please try again."
+        );
       },
       onSuccess() {
-        toast.success("User registered successfully! Redirecting to login...");
+        toast.success("Account created successfully! Redirecting to login...");
         setTimeout(() => {
           navigate("/auth/login");
-        }, 1000);
+        }, 1500);
       },
     });
   }
 
   return (
-    <div className="form-container">
-      <h2>Register</h2>
-      <form id="registrationForm" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="name">Full Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            required
-            onChange={handleChange}
-            value={form.name}
-          />
-        </div>
+    <div className="form-container max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
+      <form id="registrationForm" onSubmit={handleSubmit} noValidate>
+        {[
+          { id: "name", label: "Full Name", type: "text", required: true },
+          { id: "email", label: "Email Address", type: "email", required: true },
+          { id: "phone_number", label: "Phone Number", type: "tel", required: true },
+          { id: "nin", label: "Nigerian NIN (optional)", type: "text", placeholder: "11-digit NIN", pattern: "\\d*" },
+          { id: "password", label: "Password", type: "password", required: true, minLength: 8, placeholder: "At least 8 characters" },
+          { id: "confirmPassword", label: "Confirm Password", type: "password", required: true },
+        ].map((field) => (
+          <div key={field.id} className="form-group mb-4">
+            <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-1">
+              {field.label}
+              {field.required && <span className="text-red-500">*</span>}
+            </label>
+            <input
+              id={field.id}
+              name={field.id}
+              type={field.type}
+              required={field.required}
+              minLength={field.minLength}
+              placeholder={field.placeholder}
+              pattern={field.pattern}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              value={form[field.id as keyof typeof form]}
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
+                formErrors[field.id] ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-blue-200"
+              }`}
+            />
+            {formErrors[field.id] && (
+              <p className="mt-1 text-sm text-red-600">{formErrors[field.id]}</p>
+            )}
+          </div>
+        ))}
 
-        <div className="form-group">
-          <label htmlFor="email">Email Address</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            required
-            onChange={handleChange}
-            value={form.email}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="phone_number">Phone Number</label>
-          <input
-            type="tel"
-            id="phone_number"
-            name="phone_number"
-            required
-            onChange={handleChange}
-            value={form.phone_number}
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="nin">Nigerian NIN (optional)</label>
-          <input
-            type="text"
-            id="nin"
-            name="nin"
-            onChange={handleChange}
-            value={form.nin}
-            placeholder="11-digit NIN"
-            pattern="\d*"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            minLength={8}
-            required
-            onChange={handleChange}
-            value={form.password}
-            placeholder="At least 8 characters"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="confirmPassword">Confirm Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            onChange={handleChange}
-            value={form.confirmPassword}
-            placeholder="Re-enter your password"
-          />
-        </div>
-
-        <button type="submit" disabled={isPending}>
-          {isPending ? "Creating Account..." : "Create Account"}
+        <button
+          type="submit"
+          disabled={isPending || Object.keys(formErrors).length > 0}
+          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
+            isPending || Object.keys(formErrors).length > 0
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          {isPending ? (
+            <span className="flex items-center justify-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Creating Account...
+            </span>
+          ) : (
+            "Create Account"
+          )}
         </button>
       </form>
 
-      <p className="text-center mt-4 text-gray-800">
+      <p className="text-center mt-4 text-gray-600">
         Already have an account?{" "}
-        <Link to="/auth/login" className="text-blue-500 hover:underline">
+        <Link
+          to="/auth/login"
+          className="text-blue-600 hover:text-blue-800 font-medium"
+        >
           Login
         </Link>
       </p>
