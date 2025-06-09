@@ -1,5 +1,5 @@
 import type { UseMutationResult } from "@tanstack/react-query";
-import { useMutation, useQueryClient} from "@tanstack/react-query";
+import type { useMutation, useQueryClient} from "@tanstack/react-query";
 import {
   login,
   signup,
