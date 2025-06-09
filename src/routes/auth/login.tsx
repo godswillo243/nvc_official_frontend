@@ -2,7 +2,7 @@ import { useState, type FormEvent, useEffect } from "react";
 import { useLogin } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import { isAuthenticated } from "../../lib/actions/auth";
+import { type isAuthenticated } from "../../../lib/actions/auth";
 
 function Login() {
   const navigate = useNavigate();
