@@ -1,8 +1,7 @@
-import { useState, type FormEvent, useEffect } from "react";
+import { useState, type FormEvent } from "react";
 import { useSignup } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import { validateEmail, validatePhoneNumber, validatePassword } from "../../utils/validators";
 
 function Signup() {
   const [form, setForm] = useState({
@@ -13,71 +12,72 @@ function Signup() {
     nin: "",
     phone_number: "",
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const { mutate: signup, isPending } = useSignup();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Validate form on change
-    const errors: Record<string, string> = {};
-
-    if (touchedFields.name && !form.name.trim()) {
-      errors.name = "Full name is required";
+  const validateField = (name: string, value: string) => {
+    switch (name) {
+      case "name":
+        return value.trim() ? "" : "Full name is required";
+      case "email":
+        if (!value) return "Email is required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return "Invalid email format";
+        return "";
+      case "phone_number":
+        if (!value) return "Phone number is required";
+        if (!/^(0|234)(7|8|9)(0|1)\d{8}$/.test(value)) return "Invalid Nigerian phone number";
+        return "";
+      case "nin":
+        if (value && !/^\d{11}$/.test(value)) return "NIN must be 11 digits";
+        return "";
+      case "password":
+        if (!value) return "Password is required";
+        if (value.length < 8) return "Password must be at least 8 characters";
+        return "";
+      case "confirmPassword":
+        if (value !== form.password) return "Passwords don't match";
+        return "";
+      default:
+        return "";
     }
+  };
 
-    if (touchedFields.email) {
-      if (!form.email) {
-        errors.email = "Email is required";
-      } else if (!validateEmail(form.email)) {
-        errors.email = "Please enter a valid email address";
-      }
-    }
-
-    if (touchedFields.phone_number) {
-      if (!form.phone_number) {
-        errors.phone_number = "Phone number is required";
-      } else if (!validatePhoneNumber(form.phone_number)) {
-        errors.phone_number = "Please enter a valid phone number";
-      }
-    }
-
-    if (touchedFields.nin && form.nin && form.nin.length !== 11) {
-      errors.nin = "NIN must be exactly 11 digits";
-    }
-
-    if (touchedFields.password) {
-      if (!form.password) {
-        errors.password = "Password is required";
-      } else if (!validatePassword(form.password)) {
-        errors.password = "Password must be at least 8 characters";
-      }
-    }
-
-    if (touchedFields.confirmPassword && form.password !== form.confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
-    }
-
-    setFormErrors(errors);
-  }, [form, touchedFields]);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setTouchedFields((prev) => ({ ...prev, [name]: true }));
-  }
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (touched[name]) {
+      setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    }
+  };
 
-  function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
-    const { name } = e.target;
-    setTouchedFields((prev) => ({ ...prev, [name]: true }));
-  }
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+  };
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+
+    Object.keys(form).forEach(key => {
+      const error = validateField(key, form[key as keyof typeof form]);
+      if (error) {
+        newErrors[key] = error;
+        isValid = false;
+      }
+    });
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // Mark all fields as touched to show all possible errors
-    setTouchedFields({
+    setTouched({
       name: true,
       email: true,
       password: true,
@@ -86,106 +86,137 @@ function Signup() {
       nin: true,
     });
 
-    // Check if there are any errors
-    if (Object.keys(formErrors).length > 0) {
-      toast.error("Please fix the errors in the form");
+    if (!validateForm()) {
+      toast.error("Please fix the form errors");
       return;
     }
 
-    const { name, email, password, phone_number, nin } = form;
-
     const payload = {
-      name: name.trim(),
-      email: email.trim(),
-      password,
-      phone_number: phone_number.trim(),
-      nin: nin.trim() || "***********", // Default value if not provided
+      name: form.name.trim(),
+      email: form.email.trim(),
+      password: form.password,
+      phone_number: form.phone_number.trim(),
+      nin: form.nin.trim() || "***********",
     };
 
     signup(payload, {
-      onError(error: any) {
-        toast.error(
-          error?.response?.data?.message || 
-          error?.message || 
-          "Signup failed. Please try again."
-        );
+      onError: (error: any) => {
+        toast.error(error?.response?.data?.message || "Signup failed. Please try again.");
       },
-      onSuccess() {
-        toast.success("Account created successfully! Redirecting to login...");
-        setTimeout(() => {
-          navigate("/auth/login");
-        }, 1500);
+      onSuccess: () => {
+        toast.success("Account created! Redirecting to login...");
+        setTimeout(() => navigate("/auth/login"), 1500);
       },
     });
-  }
+  };
 
   return (
-    <div className="form-container max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold text-center mb-6">Create Account</h2>
-      <form id="registrationForm" onSubmit={handleSubmit} noValidate>
-        {[
-          { id: "name", label: "Full Name", type: "text", required: true },
-          { id: "email", label: "Email Address", type: "email", required: true },
-          { id: "phone_number", label: "Phone Number", type: "tel", required: true },
-          { id: "nin", label: "Nigerian NIN (optional)", type: "text", placeholder: "11-digit NIN", pattern: "\\d*" },
-          { id: "password", label: "Password", type: "password", required: true, minLength: 8, placeholder: "At least 8 characters" },
-          { id: "confirmPassword", label: "Confirm Password", type: "password", required: true },
-        ].map((field) => (
-          <div key={field.id} className="form-group mb-4">
-            <label htmlFor={field.id} className="block text-sm font-medium text-gray-700 mb-1">
-              {field.label}
-              {field.required && <span className="text-red-500">*</span>}
-            </label>
-            <input
-              id={field.id}
-              name={field.id}
-              type={field.type}
-              required={field.required}
-              minLength={field.minLength}
-              placeholder={field.placeholder}
-              pattern={field.pattern}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              value={form[field.id as keyof typeof form]}
-              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${
-                formErrors[field.id] ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-blue-200"
-              }`}
-            />
-            {formErrors[field.id] && (
-              <p className="mt-1 text-sm text-red-600">{formErrors[field.id]}</p>
-            )}
-          </div>
-        ))}
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Full Name <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.name ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.email ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Phone Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            name="phone_number"
+            value={form.phone_number}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.phone_number ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.phone_number && <p className="text-red-500 text-xs mt-1">{errors.phone_number}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">NIN (Optional)</label>
+          <input
+            type="text"
+            name="nin"
+            value={form.nin}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            placeholder="11-digit NIN"
+            className={`w-full p-2 border rounded ${errors.nin ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.nin && <p className="text-red-500 text-xs mt-1">{errors.nin}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">
+            Password <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="password"
+            name="password"
+            value={form.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.password ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-sm font-medium mb-1">
+            Confirm Password <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="password"
+            name="confirmPassword"
+            value={form.confirmPassword}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className={`w-full p-2 border rounded ${errors.confirmPassword ? "border-red-500" : "border-gray-300"}`}
+          />
+          {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
+        </div>
 
         <button
           type="submit"
-          disabled={isPending || Object.keys(formErrors).length > 0}
-          className={`w-full py-2 px-4 rounded-md text-white font-medium ${
-            isPending || Object.keys(formErrors).length > 0
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700"
+          disabled={isPending}
+          className={`w-full py-2 px-4 rounded text-white font-medium ${
+            isPending ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
           }`}
         >
-          {isPending ? (
-            <span className="flex items-center justify-center">
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Creating Account...
-            </span>
-          ) : (
-            "Create Account"
-          )}
+          {isPending ? "Creating Account..." : "Create Account"}
         </button>
       </form>
 
       <p className="text-center mt-4 text-gray-600">
         Already have an account?{" "}
-        <Link
-          to="/auth/login"
-          className="text-blue-600 hover:text-blue-800 font-medium"
-        >
+        <Link to="/auth/login" className="text-blue-600 hover:underline">
           Login
         </Link>
       </p>
