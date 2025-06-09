@@ -1,4 +1,4 @@
-name: NodeJS with Grunt
+name: NodeJS with Grunt CI
 
 on:
   push:
@@ -7,22 +7,52 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
-
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
+      fail-fast: false  # Continue running other versions if one fails
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Get full git history for better version detection
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+        cache: 'npm'  # Cache node_modules for faster builds
 
-    - name: Build
+    - name: Install dependencies
       run: |
-        npm install
-        grunt
+        npm ci --no-audit --prefer-offline
+      env:
+        CI: true
+      timeout-minutes: 5  # Prevent hanging on install
+
+    - name: Run Grunt build
+      id: grunt-build
+      run: |
+        echo "Starting Grunt build with Node $(node --version)"
+        grunt --verbose --no-color
+      timeout-minutes: 10  # Prevent infinite builds
+      continue-on-error: false
+
+    - name: Upload build logs on failure
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: grunt-build-logs-${{ matrix.node-version }}
+        path: |
+          **/grunt.log
+          **/build-output.log
+
+    - name: Notify failure
+      if: ${{ failure() }}
+      run: |
+        echo "Build failed for Node.js ${{ matrix.node-version }}" >&2
+        echo "Job status: ${{ job.status }}" >&2
+      shell: bash
