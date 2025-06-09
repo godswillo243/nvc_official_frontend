@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, UseMutationResult } from "@tanstack/react-query";
 import {
   login,
   signup,
@@ -13,46 +13,51 @@ import {
   ApiError,
 } from "./actions/auth";
 
+// Helper function to handle successful auth operations
+const handleAuthSuccess = (queryClient: ReturnType<typeof useQueryClient>) => 
+  (data: AuthResponse) => {
+    queryClient.setQueryData(['auth'], data.user);
+  };
+
 export const useAuthMutations = () => {
   const queryClient = useQueryClient();
 
+  // Consolidated success handler for login/signup
+  const authSuccessHandler = handleAuthSuccess(queryClient);
+
   const signupMutation = useMutation<AuthResponse, ApiError, UserSignupData>({
     mutationFn: signup,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['auth'], data.user);
-    },
+    onSuccess: authSuccessHandler,
   });
 
   const loginMutation = useMutation<AuthResponse, ApiError, UserLoginData>({
     mutationFn: login,
-    onSuccess: (data) => {
-      queryClient.setQueryData(['auth'], data.user);
-    },
+    onSuccess: authSuccessHandler,
     onError: (error) => {
       console.error('Login failed:', error.message);
     },
   });
 
-  const logoutMutation = useMutation({
+  const logoutMutation = useMutation<void, ApiError, void>({
     mutationFn: logout,
     onSuccess: () => {
       queryClient.clear();
-      queryClient.removeQueries(['auth']);
+      queryClient.removeQueries({ queryKey: ['auth'] });
     },
-    onError: (error: ApiError) => {
+    onError: (error) => {
       console.error('Logout failed:', error.message);
     },
   });
 
   const verifyEmailMutation = useMutation<void, ApiError, string>({
-    mutationFn: (token) => verifyEmail(token),
+    mutationFn: verifyEmail,
     onSuccess: () => {
-      queryClient.invalidateQueries(['auth']);
+      queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
   });
 
   const requestPasswordResetMutation = useMutation<void, ApiError, string>({
-    mutationFn: (email) => requestPasswordReset(email),
+    mutationFn: requestPasswordReset,
   });
 
   const resetPasswordMutation = useMutation<
@@ -63,10 +68,13 @@ export const useAuthMutations = () => {
     mutationFn: ({ token, newPassword }) => resetPassword(token, newPassword),
   });
 
-  const refreshTokenMutation = useMutation({
+  const refreshTokenMutation = useMutation<AuthResponse, ApiError>({
     mutationFn: refreshToken,
     retry: 1,
     retryDelay: 1000,
+    onError: (error) => {
+      console.error('Token refresh failed:', error.message);
+    },
   });
 
   return {
@@ -80,11 +88,55 @@ export const useAuthMutations = () => {
   };
 };
 
-// Individual hook exports for convenience
-export const useSignup = () => useAuthMutations().signup;
-export const useLogin = () => useAuthMutations().login;
-export const useLogout = () => useAuthMutations().logout;
-export const useVerifyEmail = () => useAuthMutations().verifyEmail;
-export const useRequestPasswordReset = () => useAuthMutations().requestPasswordReset;
-export const useResetPassword = () => useAuthMutations().resetPassword;
-export const useRefreshToken = () => useAuthMutations().refreshToken;
+// Create independent hooks to avoid unnecessary dependency chains
+export const useSignup = () => useMutation<AuthResponse, ApiError, UserSignupData>({
+  mutationFn: signup,
+  onSuccess: handleAuthSuccess(useQueryClient()),
+});
+
+export const useLogin = () => useMutation<AuthResponse, ApiError, UserLoginData>({
+  mutationFn: login,
+  onSuccess: handleAuthSuccess(useQueryClient()),
+  onError: (error) => {
+    console.error('Login failed:', error.message);
+  },
+});
+
+export const useLogout = () => useMutation<void, ApiError, void>({
+  mutationFn: logout,
+  onSuccess: () => {
+    const queryClient = useQueryClient();
+    queryClient.clear();
+    queryClient.removeQueries({ queryKey: ['auth'] });
+  },
+  onError: (error) => {
+    console.error('Logout failed:', error.message);
+  },
+});
+
+export const useVerifyEmail = () => useMutation<void, ApiError, string>({
+  mutationFn: verifyEmail,
+  onSuccess: () => {
+    useQueryClient().invalidateQueries({ queryKey: ['auth'] });
+  },
+});
+
+export const useRequestPasswordReset = () => 
+  useMutation<void, ApiError, string>({
+    mutationFn: requestPasswordReset,
+  });
+
+export const useResetPassword = () => 
+  useMutation<void, ApiError, { token: string; newPassword: string }>({
+    mutationFn: ({ token, newPassword }) => resetPassword(token, newPassword),
+  });
+
+export const useRefreshToken = () => 
+  useMutation<AuthResponse, ApiError>({
+    mutationFn: refreshToken,
+    retry: 1,
+    retryDelay: 1000,
+    onError: (error) => {
+      console.error('Token refresh failed:', error.message);
+    },
+  });
