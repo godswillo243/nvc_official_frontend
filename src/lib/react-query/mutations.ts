@@ -7,10 +7,10 @@ import {
   requestPasswordReset,
   resetPassword,
   refreshToken,
-  AuthResponse,
-  UserSignupData,
-  UserLoginData,
-  ApiError
+  type AuthResponse,
+  type UserSignupData,
+  type UserLoginData,
+  type ApiError,
 } from "./actions/auth";
 
 // Helper function to handle successful auth operations
@@ -73,7 +73,7 @@ export const useResetPassword = () =>
   });
 
 export const useRefreshToken = () =>
-  useMutation<AuthResponse, ApiError>({
+  useMutation<boolean, ApiError>({
     mutationFn: refreshToken,
     retry: 1,
     retryDelay: 1000,
