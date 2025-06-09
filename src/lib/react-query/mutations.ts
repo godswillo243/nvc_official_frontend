@@ -10,7 +10,7 @@ import {
   AuthResponse,
   UserSignupData,
   UserLoginData,
-  ApiError,
+  ApiError
 } from "./actions/auth";
 
 // Helper function to handle successful auth operations
