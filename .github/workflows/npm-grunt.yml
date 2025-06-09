@@ -1,4 +1,4 @@
-name: NodeJS with Grunt CI
+name: NodeJS with Grunt CI - Enhanced Error Tracking
 
 on:
   push:
@@ -12,47 +12,124 @@ jobs:
     strategy:
       matrix:
         node-version: [18.x, 20.x, 22.x]
-      fail-fast: false  # Continue running other versions if one fails
+      fail-fast: false
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Get full git history for better version detection
+        fetch-depth: 0
+
+    - name: Setup error tracking
+      id: error-tracker
+      run: |
+        mkdir -p ./error_logs
+        echo "NODE_VERSION=${{ matrix.node-version }}" >> ./error_logs/build_env.txt
+        echo "RUNNER_OS=$(uname -s)" >> ./error_logs/build_env.txt
+        echo "INITIAL_DATE=$(date)" >> ./error_logs/build_env.txt
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'  # Cache node_modules for faster builds
+        cache: 'npm'
 
-    - name: Install dependencies
+    - name: Install dependencies with version snapshot
+      id: install
       run: |
-        npm ci --no-audit --prefer-offline
+        {
+          echo "=== NPM VERSION ==="
+          npm --version
+          echo "=== NODE VERSION ==="
+          node --version
+          echo "=== INSTALLED PACKAGES ==="
+          npm ci --no-audit --prefer-offline 2>&1 | tee ./error_logs/npm_install.log
+          npm list --depth=0 > ./error_logs/dependency_tree.txt
+        } || {
+          echo "INSTALL_FAILED=true" >> $GITHUB_ENV
+          exit 1
+        }
       env:
         CI: true
-      timeout-minutes: 5  # Prevent hanging on install
+      timeout-minutes: 5
 
-    - name: Run Grunt build
+    - name: Run Grunt build with detailed logging
       id: grunt-build
       run: |
-        echo "Starting Grunt build with Node $(node --version)"
-        grunt --verbose --no-color
-      timeout-minutes: 10  # Prevent infinite builds
-      continue-on-error: false
+        {
+          echo "=== GRUNT VERSION ==="
+          grunt --version
+          echo "=== BUILD START ==="
+          grunt --verbose --no-color --stack 2>&1 | tee ./error_logs/grunt_build.log
+          echo "BUILD_STATUS=success" >> $GITHUB_ENV
+        } || {
+          echo "BUILD_STATUS=failed" >> $GITHUB_ENV
+          # Capture last 50 lines of error context
+          tail -n 50 ./error_logs/grunt_build.log > ./error_logs/last_50_lines.log
+          exit 1
+        }
+      timeout-minutes: 10
 
-    - name: Upload build logs on failure
+    - name: Capture system state on failure
+      if: ${{ failure() }}
+      run: |
+        echo "=== SYSTEM STATE ===" > ./error_logs/system_state.txt
+        echo "Disk space:" >> ./error_logs/system_state.txt
+        df -h >> ./error_logs/system_state.txt
+        echo "Memory:" >> ./error_logs/system_state.txt
+        free -m >> ./error_logs/system_state.txt
+        echo "Processes:" >> ./error_logs/system_state.txt
+        ps aux >> ./error_logs/system_state.txt
+
+    - name: Archive error diagnostics
       if: ${{ failure() }}
       uses: actions/upload-artifact@v4
       with:
-        name: grunt-build-logs-${{ matrix.node-version }}
+        name: error-diagnostics-${{ matrix.node-version }}-${{ github.run_id }}
         path: |
-          **/grunt.log
-          **/build-output.log
+          error_logs/*
+          !error_logs/*.tmp
+        retention-days: 7
 
-    - name: Notify failure
+    - name: Generate error report
       if: ${{ failure() }}
       run: |
-        echo "Build failed for Node.js ${{ matrix.node-version }}" >&2
-        echo "Job status: ${{ job.status }}" >&2
-      shell: bash
+        {
+          echo "### Error Diagnostic Report"
+          echo "**Node Version:** ${{ matrix.node-version }}"
+          echo "**Failure Phase:** ${{ steps.install.outcome == 'failure' && 'Dependency Installation' || 'Grunt Build' }}"
+          echo "**Error Context:**"
+          
+          if [ "${{ env.INSTALL_FAILED }}" = "true" ]; then
+            grep -i -B 2 -A 2 'error\|fail' ./error_logs/npm_install.log || echo "No explicit error patterns found"
+          else
+            grep -i -B 2 -A 2 'error\|fail\|exception' ./error_logs/grunt_build.log || echo "No explicit error patterns found"
+          fi
+          
+          echo "**System Resources:**"
+          cat ./error_logs/system_state.txt || echo "No system state captured"
+        } > ./error_logs/error_report.md
+        
+        # Create machine-readable error summary
+        {
+          echo "NODE_VERSION=${{ matrix.node-version }}"
+          echo "FAILURE_PHASE=${{ steps.install.outcome == 'failure' && 'install' || 'build' }}"
+          echo "TIMESTAMP=$(date +%s)"
+        } >> ./error_logs/error_summary.env
+
+    - name: Upload error report
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-report-${{ matrix.node-version }}
+        path: ./error_logs/error_report.md
+
+    - name: Fail with detailed message
+      if: ${{ failure() }}
+      run: |
+        echo "::error::Build failed for Node.js ${{ matrix.node-version }}"
+        echo "::error::See artifact 'error-diagnostics-${{ matrix.node-version }}-${{ github.run_id }}' for complete diagnostics"
+        echo "::group::Error Summary"
+        cat ./error_logs/error_report.md || echo "No error report generated"
+        echo "::endgroup::"
+        exit 1
