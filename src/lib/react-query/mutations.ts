@@ -7,6 +7,7 @@ import {
   requestPasswordReset,
   resetPassword,
   refreshToken,
+  isAuthenticated,
   type AuthResponse,
   type UserSignupData,
   type UserLoginData,
@@ -16,7 +17,10 @@ import {
 // Helper function to handle successful auth operations
 const handleAuthSuccess = (queryClient: ReturnType<typeof useQueryClient>) =>
   (data: AuthResponse) => {
-    queryClient.setQueryData(['auth'], data.user);
+    queryClient.setQueryData(['auth'], {
+      user: data.user,
+      isAuthenticated: isAuthenticated()
+    });
   };
 
 export const useSignup = () => {
@@ -43,8 +47,11 @@ export const useLogout = () => {
   return useMutation<void, ApiError, void>({
     mutationFn: logout,
     onSuccess: () => {
+      queryClient.setQueryData(['auth'], {
+        user: null,
+        isAuthenticated: false
+      });
       queryClient.clear();
-      queryClient.removeQueries({ queryKey: ['auth'] });
     },
     onError: (error) => {
       console.error('Logout failed:', error.message);
@@ -72,12 +79,33 @@ export const useResetPassword = () =>
     mutationFn: ({ token, newPassword }) => resetPassword(token, newPassword),
   });
 
-export const useRefreshToken = () =>
-  useMutation<boolean, ApiError>({
+export const useRefreshToken = () => {
+  const queryClient = useQueryClient();
+  return useMutation<boolean, ApiError>({
     mutationFn: refreshToken,
     retry: 1,
     retryDelay: 1000,
+    onSuccess: (success) => {
+      if (success) {
+        queryClient.setQueryData(['auth'], (old: any) => ({
+          ...old,
+          isAuthenticated: isAuthenticated()
+        }));
+      }
+    },
     onError: (error) => {
       console.error('Token refresh failed:', error.message);
+      queryClient.setQueryData(['auth'], {
+        user: null,
+        isAuthenticated: false
+      });
     },
   });
+};
+
+// New hook to check authentication status
+export const useAuthStatus = () => {
+  return {
+    isAuthenticated: isAuthenticated()
+  };
+};
