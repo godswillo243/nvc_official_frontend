@@ -13,7 +13,7 @@ function Login() {
     const [lockoutTimer, setLockoutTimer] = useState(0);
     const [showResetModal, setShowResetModal] = useState(false);
     const [resetEmail, setResetEmail] = useState("");
-    const [rememberMe, setRememberMe] = useState(false);
+    // Removed: const [rememberMe, setRememberMe] = useState(false); // No longer needed for login logic
 
     const { mutate: login, isPending } = useLogin();
     const { mutate: requestReset, isPending: isResetPending } = useRequestPasswordReset();
@@ -74,24 +74,26 @@ function Login() {
             return;
         }
         if (!validateForm()) return;
-        login({ ...form, rememberMe }, {
+
+        // Changed: Removed rememberMe from the payload sent to login
+        login(form, { //  This now matches the "working" version's call
             onSuccess: () => {
                 toast.success("Login successful!");
                 setLoginAttempts(0);
             },
-            onError: (error) => {
+            onError: (error: any) => { // Added ': any' for demonstration, but safer to type narrow as discussed
                 const newAttempts = loginAttempts + 1;
-                setLoginAttempts(newAttempts);
+                setLoginAttempts(newAttempts); // 
                 if (newAttempts >= 3) {
                     setIsLockedOut(true);
                     setLockoutTimer(30);
-                    toast.error("Too many attempts. Please try again in 30 seconds.");
+                    toast.error("Too many attempts. Please try again in 30 seconds."); // 
                     return;
                 }
                 toast.error(
-                    error.status === 401
-                        ? `Invalid email or password (${newAttempts}/3 attempts)`
-                        : error.message || "Login failed. Please try again."
+                    error.status === 401 //  (Assuming your `error` object truly has `status`)
+                        ? `Invalid email or password (${newAttempts}/3 attempts)` // 
+                        : error.message || "Login failed. Please try again." //  (Assuming your `error` object truly has `message`)
                 );
             },
         });
@@ -99,12 +101,12 @@ function Login() {
 
     function handlePasswordReset() {
         if (!resetEmail) {
-            toast.error("Please enter your email address");
-            return;
+            toast.error("Please enter your email address"); // 
+            return; // 
         }
         if (!/\S+@\S+\.\S+/.test(resetEmail)) {
-            toast.error("Please enter a valid email address");
-            return;
+            toast.error("Please enter a valid email address"); // 
+            return; // 
         }
         requestReset(resetEmail, {
             onSuccess: () => {
@@ -112,8 +114,8 @@ function Login() {
                 setShowResetModal(false);
                 setResetEmail("");
             },
-            onError: (error) => {
-                toast.error(error.message || "Failed to send reset link");
+            onError: (error: any) => { // Added ': any' for demonstration
+                toast.error(error.message || "Failed to send reset link"); // 
             },
         });
     }
@@ -155,222 +157,178 @@ function Login() {
     );
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-            {/* Login Card */}
-            <div className="w-full max-w-md bg-white rounded-xl shadow-xl overflow-hidden">
-                {/* Decorative Header */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 py-6 px-8">
-                    <h2 className="text-2xl font-bold text-white text-center">Welcome Back</h2>
-                    <p className="text-blue-200 text-center mt-2">Sign in to access your account</p>
-                </div>
-                
-                <div className="p-8">
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Email Field */}
-                        <div className="space-y-2">
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
+        <>
+            {/* Global Styles & Animations: These will apply regardless of where the component is wrapped */}
+            <style>
+                {`
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); } // 
+                    25% { transform: translateX(-5px); } // 
+                    50% { transform: translateX(5px); } // 
+                    75% { transform: translateX(-5px); } // 
+                }
+                @keyframes zoomIn { // 
+                    0% { transform: scale(0.9); opacity: 0; } // 
+                    100% { transform: scale(1); opacity: 1; } // 
+                }
+                @keyframes fadeIn { // 
+                    0% { opacity: 0; } // 
+                    100% { opacity: 1; } // 
+                }
+
+                .animate-shake {
+                    animation: shake 0.3s ease-in-out; // 
+                }
+                .animate-zoomIn {
+                    animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* More playful zoom */ // 
+                }
+                .animate-fadeIn { // 
+                    animation: fadeIn 0.3s ease-out; // 
+                }
+                `}
+            </style>
+
+            {/* Login Container: Centralized and styled for modern appeal */}
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6">
+                <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10 transform transition-all duration-500 ease-out animate-fadeIn border border-gray-100"> {/*  */}
+                    <h2 className="text-4xl font-extrabold text-center text-gray-800 mb-2 mt-4 leading-tight">Welcome Back</h2>
+                    <p className="text-center text-gray-500 mb-8">Sign in to continue to your account.</p>
+
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Email Input */} {/*  */}
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                             <input
-                                type="email"
+                                [cite_start]type="email" // [cite: 40]
                                 id="email"
                                 name="email"
-                                required
+                                [cite_start]required // [cite: 41]
                                 onChange={handleChange}
                                 value={form.email}
-                                className={`w-full px-4 py-3 border rounded-lg transition-colors ${
-                                    formErrors.email 
-                                        ? "border-red-500 bg-red-50 animate-shake" 
-                                        : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                }`}
+                                [cite_start]className={`mt-1 block w-full px-5 py-3 border ${ // [cite: 42]
+                                    formErrors.email ?
+                                        [cite_start]"border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500" // [cite: 43]
+                                } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
                                 disabled={isLockedOut}
-                                placeholder="name@company.com"
+                                [cite_start]placeholder="name@example.com" // [cite: 44]
                             />
-                            {formErrors.email && <p className="text-sm text-red-600 mt-1">{formErrors.email}</p>}
+                            {formErrors.email && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.email}</p>}
                         </div>
 
-                        {/* Password Field */}
-                        <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowResetModal(true)}
-                                    className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                                >
-                                    Forgot password?
-                                </button>
-                            </div>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    id="password"
-                                    name="password"
-                                    minLength={8}
-                                    required
-                                    onChange={handleChange}
-                                    value={form.password}
-                                    className={`w-full px-4 py-3 pr-12 border rounded-lg transition-colors ${
-                                        formErrors.password 
-                                            ? "border-red-500 bg-red-50 animate-shake" 
-                                            : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                    }`}
-                                    placeholder="••••••••"
-                                    disabled={isLockedOut}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700"
-                                    aria-label={showPassword ? "Hide password" : "Show password"}
-                                >
-                                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                                </button>
-                            </div>
-                            {formErrors.password && <p className="text-sm text-red-600 mt-1">{formErrors.password}</p>}
+                        {/* Password Input */} {/*  */}
+                        <div className="relative">
+                            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                            <input
+                                type={showPassword ?
+                                    [cite_start]"text" : "password"} // [cite: 47]
+                                id="password"
+                                name="password"
+                                minLength={8}
+                                [cite_start]required // [cite: 48]
+                                onChange={handleChange}
+                                value={form.password}
+                                [cite_start]className={`mt-1 block w-full px-5 py-3 pr-12 border ${ // [cite: 49]
+                                    formErrors.password ?
+                                        [cite_start]"border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500" // [cite: 50]
+                                } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
+                                placeholder="Minimum 8 characters"
+                                [cite_start]disabled={isLockedOut} // [cite: 51]
+                            />
+                            <button
+                                type="button"
+                                [cite_start]onClick={() => setShowPassword(!showPassword)} // 
+                                className="absolute inset-y-0 right-0 top-7 pr-4 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                aria-label={showPassword ? "Hide password" : "Show password"} // 
+                            >
+                                {showPassword ?
+                                    <EyeOffIcon /> : <EyeIcon />} {/*  */}
+                            </button>
+                            {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                         </div>
 
-                        {/* Remember Me */}
+                        {/* Forgot Password Link */} {/*  */}
+                        <div className="text-right">
+                            <button
+                                [cite_start]type="button" // [cite: 56]
+                                onClick={() => setShowResetModal(true)}
+                                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 -mr-2 transition-colors duration-200"
+                            >
+                                Forgot password? {/*  */}
+                            </button>
+                        </div>
+
+                        {/* Remember Me Checkbox (UI Only - No Logic) */}
                         <div className="flex items-center">
                             <input
                                 id="remember-me"
                                 name="remember-me"
                                 type="checkbox"
-                                checked={rememberMe}
-                                onChange={(e) => setRememberMe(e.target.checked)}
+                                checked={false} // Fixed to false as it's not functional
+                                onChange={() => { /* No-op: do nothing as rememberMe logic is removed */ }}
                                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                disabled={isLockedOut} // Inherit disabled state for consistency
                             />
                             <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                                 Remember me
                             </label>
                         </div>
 
-                        {/* Submit Button */}
+                        {/* Login Button */}
                         <button
-                            type="submit"
-                            disabled={isPending || isLockedOut}
-                            className={`w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold rounded-lg shadow-md hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                                isPending || isLockedOut ? "opacity-70 cursor-not-allowed" : ""
-                            }`}
+                            [cite_start]type="submit" // [cite: 59]
+                            [cite_start]disabled={isPending || isLockedOut} // [cite: 60]
+                            className={`w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 text-lg
+                            ${isPending || isLockedOut ? [cite_start]"opacity-60 cursor-not-allowed" : ""}`} // [cite: 61]
                         >
-                            {isPending ? (
-                                <span className="flex items-center justify-center">
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    Processing...
-                                </span>
-                            ) : isLockedOut ? (
-                                `Try again in ${lockoutTimer}s`
-                            ) : (
-                                "Sign In"
-                            )}
+                            {isPending ?
+                                "Logging in..." : isLockedOut ? `Try again in ${lockoutTimer}s` : "Login"} {/*  */}
                         </button>
-                    </form>
 
-                    {/* Divider */}
-                    <div className="mt-6 relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                        </div>
-                    </div>
-
-                    {/* Social Login */}
-                    <div className="mt-6 grid grid-cols-3 gap-3">
-                        <button
-                            type="button"
-                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                            <GoogleIcon />
-                            <span className="ml-2">Google</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                            <FacebookIcon />
-                            <span className="ml-2">Facebook</span>
-                        </button>
-                        <button
-                            type="button"
-                            className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-                        >
-                            <GitHubIcon />
-                            <span className="ml-2">GitHub</span>
-                        </button>
-                    </div>
-
-                    {/* Sign Up Link */}
-                    <div className="mt-6 text-center">
-                        <p className="text-sm text-gray-600">
-                            Don't have an account?{" "}
-                            <Link to="/auth/signup" className="font-medium text-blue-600 hover:text-blue-800 transition-colors">
-                                Sign up
-                            </Link>
+                        {/* Sign Up Link */}
+                        <p className="text-center text-sm text-gray-600 mt-6">
+                            Don’t have an account?{" "} {/*  */}
+                            <Link to="/auth/signup" className="font-semibold text-blue-600 hover:text-blue-700 hover:underline">Sign up</Link>
                         </p>
-                    </div>
+                    </form> {/*  */}
                 </div>
             </div>
 
             {/* Password Reset Modal */}
             {showResetModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full overflow-hidden">
-                        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 py-5 px-6">
-                            <h3 className="text-xl font-bold text-white">Reset Password</h3>
-                        </div>
-                        
-                        <div className="p-6">
-                            <p className="text-gray-600 mb-4">
-                                Enter your email address and we'll send you a link to reset your password.
-                            </p>
-                            <input
-                                type="email"
-                                value={resetEmail}
-                                onChange={(e) => setResetEmail(e.target.value)}
-                                placeholder="your@email.com"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
-                            />
-                            <div className="mt-6 flex justify-end space-x-3">
-                                <button
-                                    onClick={() => {
-                                        setShowResetModal(false);
-                                        setResetEmail("");
-                                    }}
-                                    className="px-5 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={handlePasswordReset}
-                                    disabled={isResetPending}
-                                    className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-70 transition-colors"
-                                >
-                                    {isResetPending ? "Sending..." : "Send Link"}
-                                </button>
-                            </div>
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 animate-fadeIn p-4"> {/*  */}
+                    <div className="bg-white rounded-2xl p-8 max-w-sm w-full animate-zoomIn shadow-2xl"> {/*  */}
+                        <h3 className="text-2xl font-bold text-gray-800 mb-4 text-center">Reset Password</h3>
+                        <p className="text-sm text-gray-600 mb-6 text-center">Enter your email address and we'll send you a link to reset your password.</p>
+                        <input
+                            [cite_start]type="email" // [cite: 66]
+                            value={resetEmail}
+                            onChange={(e) => setResetEmail(e.target.value)}
+                            placeholder="your@example.com" // 
+                            className="w-full px-4 py-3 border border-gray-300 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-200 text-base placeholder-gray-400"
+                        />
+                        <div className="flex justify-end space-x-4"> {/*  */}
+                            <button
+                                onClick={() => {
+                                    setShowResetModal(false); // 
+                                    setResetEmail(""); // 
+                                }}
+                                className="px-5 py-2 text-base font-medium text-gray-600 rounded-lg hover:bg-gray-100 hover:text-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-200"
+                            >
+                                Cancel {/*  */}
+                            </button>
+                            <button
+                                onClick={handlePasswordReset}
+                                [cite_start]disabled={isResetPending} // [cite: 72]
+                                className="px-6 py-2 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                            >
+                                {isResetPending ?
+                                    "Sending..." : "Send Link"} {/*  */}
+                            </button>
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Global Styles */}
-            <style>
-                {`
-                @keyframes shake {
-                    0%, 100% { transform: translateX(0); }
-                    25% { transform: translateX(-5px); }
-                    50% { transform: translateX(5px); }
-                    75% { transform: translateX(-5px); }
-                }
-                .animate-shake {
-                    animation: shake 0.3s ease-in-out;
-                }
-                `}
-            </style>
-        </div>
+            )} {/*  */}
+        </>
     );
 }
 
