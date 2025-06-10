@@ -62,6 +62,21 @@ function Login() {
         }
     }
 
+    // Function to handle focus event for floating labels
+    const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.parentNode?.classList.add('is-focused');
+    };
+
+    // Function to handle blur event for floating labels
+    const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        e.currentTarget.parentNode?.classList.remove('is-focused');
+        if (e.currentTarget.value) {
+            e.currentTarget.parentNode?.classList.add('has-value');
+        } else {
+            e.currentTarget.parentNode?.classList.remove('has-value');
+        }
+    };
+
     function validateForm() {
         let valid = true;
         const newErrors = { email: "", password: "" };
@@ -134,7 +149,7 @@ function Login() {
         });
     }
 
-    // --- SVG Icons (Moved here for better readability) ---
+    // --- SVG Icons ---
     const EyeIcon = () => (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -327,15 +342,8 @@ function Login() {
                                 value={form.email}
                                 className={`input-field mt-1 block w-full pl-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${formErrors.email ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"}`}
                                 disabled={isLockedOut}
-                                onFocus={(e) => { e.currentTarget.parentNode?.classList.add('is-focused'); }}
-                                onBlur={(e) => {
-                                    e.currentTarget.parentNode?.classList.remove('is-focused');
-                                    if (e.currentTarget.value) {
-                                        e.currentTarget.parentNode?.classList.add('has-value');
-                                    } else {
-                                        e.currentTarget.parentNode?.classList.remove('has-value');
-                                    }
-                                }}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
                             />
                             <label htmlFor="email" className="input-label">Email Address</label>
                             {/* Clear Button for Email */}
@@ -372,15 +380,8 @@ function Login() {
                                 value={form.password}
                                 className={`input-field mt-1 block w-full pl-12 pr-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${formErrors.password ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"}`}
                                 disabled={isLockedOut}
-                                onFocus={(e) => { e.currentTarget.parentNode?.classList.add('is-focused'); }}
-                                onBlur={(e) => {
-                                    e.currentTarget.parentNode?.classList.remove('is-focused');
-                                    if (e.currentTarget.value) {
-                                        e.currentTarget.parentNode?.classList.add('has-value');
-                                    } else {
-                                        e.currentTarget.parentNode?.classList.remove('has-value');
-                                    }
-                                }}
+                                onFocus={handleInputFocus}
+                                onBlur={handleInputBlur}
                             />
                             <label htmlFor="password" className="input-label">Password</label>
                             <button
