@@ -56,6 +56,7 @@ function Login() {
         if (name === "password") {
             setPasswordStrength(getPasswordStrength(value));
         }
+        // Clear error when user starts typing again
         if (formErrors[name as keyof typeof formErrors]) {
             setFormErrors((prev) => ({ ...prev, [name]: "" }));
         }
@@ -133,7 +134,7 @@ function Login() {
         });
     }
 
-    // --- SVG Icons ---
+    // --- SVG Icons (Moved here for better readability) ---
     const EyeIcon = () => (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -324,14 +325,16 @@ function Login() {
                                 required
                                 onChange={handleChange}
                                 value={form.email}
-                                className={`input-field mt-1 block w-full pl-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${
-                                    formErrors.email ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
-                                }`}
+                                className={`input-field mt-1 block w-full pl-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${formErrors.email ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"}`}
                                 disabled={isLockedOut}
-                                onFocus={(e) => e.currentTarget.parentNode?.classList.add('is-focused')}
+                                onFocus={(e) => { e.currentTarget.parentNode?.classList.add('is-focused'); }}
                                 onBlur={(e) => {
-                                    if (!e.currentTarget.value) e.currentTarget.parentNode?.classList.remove('is-focused');
-                                    else e.currentTarget.parentNode?.classList.add('has-value'); // Re-add has-value if content exists
+                                    e.currentTarget.parentNode?.classList.remove('is-focused');
+                                    if (e.currentTarget.value) {
+                                        e.currentTarget.parentNode?.classList.add('has-value');
+                                    } else {
+                                        e.currentTarget.parentNode?.classList.remove('has-value');
+                                    }
                                 }}
                             />
                             <label htmlFor="email" className="input-label">Email Address</label>
@@ -367,14 +370,16 @@ function Login() {
                                 required
                                 onChange={handleChange}
                                 value={form.password}
-                                className={`input-field mt-1 block w-full pl-12 pr-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${
-                                    formErrors.password ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
-                                }`}
+                                className={`input-field mt-1 block w-full pl-12 pr-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${formErrors.password ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"}`}
                                 disabled={isLockedOut}
-                                onFocus={(e) => e.currentTarget.parentNode?.classList.add('is-focused')}
+                                onFocus={(e) => { e.currentTarget.parentNode?.classList.add('is-focused'); }}
                                 onBlur={(e) => {
-                                    if (!e.currentTarget.value) e.currentTarget.parentNode?.classList.remove('is-focused');
-                                    else e.currentTarget.parentNode?.classList.add('has-value'); // Re-add has-value if content exists
+                                    e.currentTarget.parentNode?.classList.remove('is-focused');
+                                    if (e.currentTarget.value) {
+                                        e.currentTarget.parentNode?.classList.add('has-value');
+                                    } else {
+                                        e.currentTarget.parentNode?.classList.remove('has-value');
+                                    }
                                 }}
                             />
                             <label htmlFor="password" className="input-label">Password</label>
@@ -437,9 +442,7 @@ function Login() {
                         <button
                             type="submit"
                             disabled={isPending || isLockedOut}
-                            className={`w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 text-lg ${
-                                isPending || isLockedOut ? "opacity-60 cursor-not-allowed" : ""
-                            }`}
+                            className={`w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 text-lg ${isPending || isLockedOut ? "opacity-60 cursor-not-allowed" : ""}`}
                         >
                             {isPending ? (
                                 <span className="flex items-center justify-center">
@@ -491,9 +494,7 @@ function Login() {
                             <button
                                 onClick={handlePasswordReset}
                                 disabled={isResetPending}
-                                className={`px-6 py-2 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md ${
-                                    isResetPending ? "flex items-center justify-center" : ""
-                                }`}
+                                className={`px-6 py-2 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md ${isResetPending ? "flex items-center justify-center" : ""}`}
                             >
                                 {isResetPending ? (
                                     <span className="flex items-center justify-center">
