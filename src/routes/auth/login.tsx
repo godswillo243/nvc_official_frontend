@@ -1,8 +1,7 @@
 import { useState, type FormEvent, useEffect } from "react";
-import { useLogin } from "../../lib/react-query/mutations";
+import { useLogin, useRequestPasswordReset, useAuthStatus } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import { type isAuthenticated } from "../../../lib/actions/auth";
 
 function Login() {
   const navigate = useNavigate();
@@ -18,15 +17,19 @@ function Login() {
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLockedOut, setIsLockedOut] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
 
-  const { mutate: login, isPending, isError, error } = useLogin();
+  const { mutate: login, isPending } = useLogin();
+  const { mutate: requestReset, isPending: isResetPending } = useRequestPasswordReset();
+  const { isAuthenticated } = useAuthStatus();
 
   // Redirect if already logged in
   useEffect(() => {
-    if (isAuthenticated()) {
+    if (isAuthenticated) {
       navigate("/dashboard");
     }
-  }, [navigate]);
+  }, [isAuthenticated, navigate]);
 
   // Handle lockout timer
   useEffect(() => {
@@ -90,63 +93,63 @@ function Login() {
     if (!validateForm()) return;
 
     login(form, {
-      onSuccess: (data) => {
+      onSuccess: () => {
         toast.success("Login successful!");
-        setLoginAttempts(0); // Reset attempts on success
-        navigate("/dashboard");
+        setLoginAttempts(0);
       },
       onError: (error) => {
-        console.error("Login error:", error);
-        
         const newAttempts = loginAttempts + 1;
         setLoginAttempts(newAttempts);
 
         if (newAttempts >= 3) {
           setIsLockedOut(true);
-          setLockoutTimer(30); // 30 second lockout
+          setLockoutTimer(30);
           toast.error("Too many attempts. Please try again in 30 seconds.");
           return;
         }
 
-        // Handle specific error cases
-        if (error.status === 401) {
-          toast.error(`Invalid email or password (${newAttempts}/3 attempts)`);
-        } else {
-          toast.error(error.message || "Login failed. Please try again.");
-        }
+        toast.error(
+          error.status === 401
+            ? `Invalid email or password (${newAttempts}/3 attempts)`
+            : error.message || "Login failed. Please try again."
+        );
       }
     });
   }
 
-  // SVG Eye Icon Component
+  function handlePasswordReset() {
+    if (!resetEmail) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    if (!/\S+@\S+\.\S+/.test(resetEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    requestReset(resetEmail, {
+      onSuccess: () => {
+        toast.success("Password reset link sent to your email");
+        setShowResetModal(false);
+        setResetEmail("");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to send reset link");
+      }
+    });
+  }
+
+  // SVG Eye Icon Components
   const EyeIcon = () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
       <circle cx="12" cy="12" r="3"></circle>
     </svg>
   );
 
-  // SVG Eye Off Icon Component
   const EyeOffIcon = () => (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
       <line x1="1" y1="1" x2="23" y2="23"></line>
     </svg>
@@ -209,12 +212,13 @@ function Login() {
         </div>
 
         <div className="flex items-center justify-between">
-          <Link 
-            to="/auth/forgot-password" 
+          <button
+            type="button"
+            onClick={() => setShowResetModal(true)}
             className="text-sm text-blue-600 hover:underline"
           >
             Forgot password?
-          </Link>
+          </button>
         </div>
 
         <button
@@ -238,12 +242,6 @@ function Login() {
             "Login"
           )}
         </button>
-
-        {isError && !isLockedOut && (
-          <div className="text-red-600 text-sm text-center mt-2">
-            {error?.message || "Login failed. Please try again."}
-          </div>
-        )}
 
         <div className="mt-6">
           <div className="relative">
@@ -286,6 +284,43 @@ function Login() {
           Sign up
         </Link>
       </p>
+
+      {/* Password Reset Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-medium mb-4">Reset Password</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Enter your email address and we'll send you a link to reset your password.
+            </p>
+            <input
+              type="email"
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="Your email address"
+              className="w-full p-2 border rounded-md mb-4"
+            />
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowResetModal(false);
+                  setResetEmail("");
+                }}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePasswordReset}
+                disabled={isResetPending}
+                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+              >
+                {isResetPending ? "Sending..." : "Send Reset Link"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
