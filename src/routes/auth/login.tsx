@@ -133,7 +133,7 @@ function Login() {
         });
     }
 
-    // --- SVG Icons (Moved here for better readability) ---
+    // --- SVG Icons ---
     const EyeIcon = () => (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -177,7 +177,7 @@ function Login() {
         </svg>
     );
 
-    // --- Password Strength Bar Colors ---
+    // --- Password Strength Bar Colors & Text ---
     const getStrengthBarColor = (strength: number) => {
         switch (strength) {
             case 0: return 'bg-gray-200';
@@ -205,6 +205,11 @@ function Login() {
     return (
         <>
             {/* Global Styles & Animations: These will apply regardless of where the component is wrapped */}
+            {/* Using a <style> tag directly in the component is generally discouraged for larger apps,
+                but acceptable for self-contained components like this login form,
+                especially when avoiding external CSS-in-JS libraries.
+                For production, consider moving these to a global CSS file or a dedicated styling solution.
+            */}
             <style>
                 {`
                 @keyframes backgroundAnimation {
@@ -243,28 +248,46 @@ function Login() {
                 }
 
                 /* Floating Label Specific Styles */
+                /* The label starts inside the input space */
+                .input-group .input-label {
+                    position: absolute;
+                    left: 3rem; /* Adjusted for icon width + padding */
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: theme('colors.gray.500');
+                    transition: all 0.2s ease-in-out;
+                    pointer-events: none; /* Allows clicks to pass through to the input */
+                    font-size: 1rem; /* Default font size */
+                }
+
+                /* When the input group has a value or is focused, move the label up */
                 .input-group.has-value .input-label,
                 .input-group.is-focused .input-label {
-                    @apply text-xs -translate-y-6 scale-90 text-blue-600; /* Smaller, moves up, colored */
+                    top: 0; /* Move to the top */
+                    transform: translateY(-0.8rem); /* Adjust vertical position */
+                    font-size: 0.75rem; /* Make it smaller */
+                    color: theme('colors.blue.600'); /* Change color */
+                    background-color: white; /* Match background for clear cut-out effect */
+                    padding: 0 0.25rem; /* Add horizontal padding for cut-out */
+                    left: 2.75rem; /* Adjust horizontal position after shrinking */
+                    z-index: 10; /* Ensure it's above the input border */
                 }
-                .input-group .input-label {
-                    @apply absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 transition-all duration-200 pointer-events-none;
-                }
-                .input-group .input-field:focus + .input-label { /* Ensure label moves on focus */
-                     @apply text-blue-600;
+
+                /* Specific adjustment for password eye/clear button interaction */
+                .input-group .input-field {
+                    padding-right: 3rem; /* Make space for eye/clear button */
                 }
                 `}
             </style>
 
-            {/* Login Container: Centralized and styled for modern appeal */}
+            {/* Login Container */}
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4 sm:p-6 animate-background">
                 <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10 transform transition-all duration-500 ease-out animate-fadeIn border border-gray-100 relative overflow-hidden">
-                    {/* Optional: Subtle top border for visual interest */}
+                    {/* Subtle top border */}
                     <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-blue-400 to-purple-500 rounded-t-3xl"></div>
 
                     {/* Brand/Logo Placeholder */}
                     <div className="text-center mb-8 pt-4">
-                        {/* Replace with your actual logo or brand name */}
                         <img src="https://via.placeholder.com/60x60.png?text=LOGO" alt="Company Logo" className="mx-auto h-16 w-16 mb-4 rounded-full shadow-inner" />
                         <h1 className="text-4xl font-extrabold text-gray-800 leading-tight">MyApp Name</h1>
                     </div>
@@ -277,7 +300,7 @@ function Login() {
                             <span className="ml-3">Sign in with Google</span>
                         </button>
                         <button className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl shadow-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200 text-base font-medium">
-                            <FacebookIcon color="#1877F2" /> {/* Facebook blue color */}
+                            <FacebookIcon />
                             <span className="ml-3">Sign in with Facebook</span>
                         </button>
                     </div>
@@ -288,11 +311,10 @@ function Login() {
                         <div className="flex-grow border-t border-gray-300"></div>
                     </div>
 
-
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Email Input with Floating Label and Icon */}
-                        <div className={`input-group relative ${form.email ? 'has-value' : ''} ${formErrors.email ? 'border-red-500' : ''}`}>
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <div className={`input-group relative ${form.email ? 'has-value' : ''}`}>
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
                                 <MailIcon />
                             </div>
                             <input
@@ -302,13 +324,14 @@ function Login() {
                                 required
                                 onChange={handleChange}
                                 value={form.email}
-                                className={`input-field mt-1 block w-full pl-12 pr-10 py-3 border ${
+                                className={`input-field mt-1 block w-full pl-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${
                                     formErrors.email ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
-                                } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
+                                }`}
                                 disabled={isLockedOut}
                                 onFocus={(e) => e.currentTarget.parentNode?.classList.add('is-focused')}
                                 onBlur={(e) => {
                                     if (!e.currentTarget.value) e.currentTarget.parentNode?.classList.remove('is-focused');
+                                    else e.currentTarget.parentNode?.classList.add('has-value'); // Re-add has-value if content exists
                                 }}
                             />
                             <label htmlFor="email" className="input-label">Email Address</label>
@@ -317,7 +340,7 @@ function Login() {
                                 <button
                                     type="button"
                                     onClick={() => setForm(prev => ({ ...prev, email: "" }))}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 z-10"
                                     aria-label="Clear email"
                                 >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -332,8 +355,8 @@ function Login() {
                         </div>
 
                         {/* Password Input with Floating Label, Icon, and Strength Indicator */}
-                        <div className={`input-group relative ${form.password ? 'has-value' : ''} ${formErrors.password ? 'border-red-500' : ''}`}>
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                        <div className={`input-group relative ${form.password ? 'has-value' : ''}`}>
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
                                 <LockIcon />
                             </div>
                             <input
@@ -344,20 +367,21 @@ function Login() {
                                 required
                                 onChange={handleChange}
                                 value={form.password}
-                                className={`input-field mt-1 block w-full pl-12 pr-12 py-3 border ${
+                                className={`input-field mt-1 block w-full pl-12 pr-12 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400 ${
                                     formErrors.password ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
-                                } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
+                                }`}
                                 disabled={isLockedOut}
                                 onFocus={(e) => e.currentTarget.parentNode?.classList.add('is-focused')}
                                 onBlur={(e) => {
                                     if (!e.currentTarget.value) e.currentTarget.parentNode?.classList.remove('is-focused');
+                                    else e.currentTarget.parentNode?.classList.add('has-value'); // Re-add has-value if content exists
                                 }}
                             />
                             <label htmlFor="password" className="input-label">Password</label>
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 top-1/2 -translate-y-1/2 pr-4 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                                className="absolute inset-y-0 right-0 top-1/2 -translate-y-1/2 pr-4 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200 z-10"
                                 aria-label={showPassword ? "Hide password" : "Show password"}
                             >
                                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -370,15 +394,17 @@ function Login() {
                             )}
 
                             {/* Password Strength Indicator */}
-                            {form.password && (
+                            {form.password.length > 0 && ( // Show only if password is being typed
                                 <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                                     <div
                                         className={`h-1 rounded-full ${getStrengthBarColor(passwordStrength)} transition-all duration-300`}
                                         style={{ width: `${(passwordStrength / 5) * 100}%` }}
                                     ></div>
-                                    <span className={`text-xs font-medium ${getStrengthBarColor(passwordStrength).replace('bg', 'text')} ml-1`}>
-                                        {getStrengthText(passwordStrength)}
-                                    </span>
+                                    {passwordStrength > 0 && ( // Only show text if strength is not zero
+                                        <span className={`text-xs font-medium ${getStrengthBarColor(passwordStrength).replace('bg', 'text')} ml-1`}>
+                                            {getStrengthText(passwordStrength)}
+                                        </span>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -394,7 +420,7 @@ function Login() {
                                     checked={rememberMe}
                                     onChange={(e) => setRememberMe(e.target.checked)}
                                 />
-                                <label htmlFor="remember-me" className="ml-2 block text-gray-900">
+                                <label htmlFor="remember-me" className="ml-2 block text-gray-900 cursor-pointer">
                                     Remember me
                                 </label>
                             </div>
@@ -411,8 +437,9 @@ function Login() {
                         <button
                             type="submit"
                             disabled={isPending || isLockedOut}
-                            className={`w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 text-lg
-                            ${isPending || isLockedOut ? "opacity-60 cursor-not-allowed" : ""}`}
+                            className={`w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl shadow-lg hover:bg-blue-700 active:scale-[0.98] transition-all duration-200 text-lg ${
+                                isPending || isLockedOut ? "opacity-60 cursor-not-allowed" : ""
+                            }`}
                         >
                             {isPending ? (
                                 <span className="flex items-center justify-center">
@@ -464,7 +491,9 @@ function Login() {
                             <button
                                 onClick={handlePasswordReset}
                                 disabled={isResetPending}
-                                className="px-6 py-2 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                                className={`px-6 py-2 bg-blue-600 text-white text-base font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 shadow-md ${
+                                    isResetPending ? "flex items-center justify-center" : ""
+                                }`}
                             >
                                 {isResetPending ? (
                                     <span className="flex items-center justify-center">
