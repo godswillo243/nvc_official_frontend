@@ -213,7 +213,7 @@ function Login() {
                                         placeholder="Minimum 8 characters"
                                         disabled={isLockedOut}
                                     />
-                                    <button
+                                    <p
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
@@ -224,7 +224,7 @@ function Login() {
                                         ) : (
                                             <Eye className="h-5 w-5" />
                                         )}
-                                    </button>
+                                    </p>
                                 </div>
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                             </div>
@@ -242,13 +242,13 @@ function Login() {
                                     </label>
                                 </div>
 
-                                <button
+                                <p
                                     type="button"
                                     onClick={() => setShowResetModal(true)}
                                     className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200"
                                 >
                                     Forgot password?
-                                </button>
+                                </p>
                             </div>
 
                             <button
