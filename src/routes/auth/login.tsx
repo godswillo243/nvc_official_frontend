@@ -2,7 +2,7 @@ import { useState, type FormEvent, useEffect } from "react";
 import { useLogin, useRequestPasswordReset, useAuthStatus } from "../../lib/react-query/mutations";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, LockKeyhole, ArrowRight } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react"; // Removed Mail, LockKeyhole
 
 function Login() {
     const navigate = useNavigate();
@@ -88,11 +88,11 @@ function Login() {
                     toast.error("Too many attempts. Please try again in 30 seconds.");
                     return;
                 }
-                toast.error(
-                    error.status === 401
-                        ? `Invalid email or password (${newAttempts}/3 attempts)`
-                        : error.message || "Login failed. Please try again."
-                );
+                // Cast error to 'any' if its type doesn't include 'status' or 'message'
+                const errorMessage = (error as any).status === 401
+                    ? `Invalid email or password (${newAttempts}/3 attempts)`
+                    : (error as any).message || "Login failed. Please try again.";
+                toast.error(errorMessage);
             },
         });
     }
@@ -113,7 +113,7 @@ function Login() {
                 setResetEmail("");
             },
             onError: (error) => {
-                toast.error(error.message || "Failed to send reset link");
+                toast.error((error as any).message || "Failed to send reset link");
             },
         });
     }
@@ -146,11 +146,15 @@ function Login() {
                 .animate-fadeIn {
                     animation: fadeIn 0.4s ease-out forwards;
                 }
+                /* Added for animation delay on the second float element */
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
                 `}
             </style>
 
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-purple-50 to-indigo-100 p-4 sm:p-6">
-                <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 sm:p-10 transform transition-all duration-300 ease-out animate-fadeIn border border-gray-100 overflow-hidden">
+                <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 sm:p-10 transform transition-all duration-300 ease-out animate-fadeIn border border-gray-100 overflow-hidden relative">
                     {/* Decorative elements */}
                     <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-100 rounded-full opacity-20 animate-float"></div>
                     <div className="absolute -bottom-16 -left-16 w-32 h-32 bg-purple-100 rounded-full opacity-20 animate-float animation-delay-2000"></div>
@@ -171,10 +175,7 @@ function Login() {
                             {/* Email Input */}
                             <div>
                                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
-                                    </div>
+                                <div className="relative"> {/* Keep relative for potential future absolute elements, but remove current icon */}
                                     <input
                                         type="email"
                                         id="email"
@@ -182,7 +183,8 @@ function Login() {
                                         required
                                         onChange={handleChange}
                                         value={form.email}
-                                        className={`pl-10 mt-1 block w-full px-4 py-3 border ${
+                                        // Removed pl-10 since no icon is present
+                                        className={`block w-full px-4 py-3 border ${
                                             formErrors.email ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
                                         } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
                                         disabled={isLockedOut}
@@ -195,10 +197,7 @@ function Login() {
                             {/* Password Input */}
                             <div>
                                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <LockKeyhole className="h-5 w-5 text-gray-400" />
-                                    </div>
+                                <div className="relative"> {/* Keep relative for eye icon */}
                                     <input
                                         type={showPassword ? "text" : "password"}
                                         id="password"
@@ -207,14 +206,16 @@ function Login() {
                                         required
                                         onChange={handleChange}
                                         value={form.password}
-                                        className={`pl-10 pr-10 mt-1 block w-full px-4 py-3 border ${
+                                        // Removed pl-10, kept pr-10 for eye icon
+                                        className={`block w-full px-4 py-3 pr-10 border ${
                                             formErrors.password ? "border-red-500 animate-shake" : "border-gray-300 focus:border-blue-500"
                                         } rounded-xl shadow-sm focus:ring-2 focus:ring-blue-200 focus:outline-none transition-all duration-200 text-base placeholder-gray-400`}
                                         placeholder="Minimum 8 characters"
                                         disabled={isLockedOut}
                                     />
-                                    <p
-                                        
+                                    {/* Password visibility toggle icon */}
+                                    <button
+                                        type="button" // Important: change to type="button" to prevent form submission
                                         onClick={() => setShowPassword(!showPassword)}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
                                         aria-label={showPassword ? "Hide password" : "Show password"}
@@ -224,31 +225,33 @@ function Login() {
                                         ) : (
                                             <Eye className="h-5 w-5" />
                                         )}
-                                    </p>
+                                    </button>
                                 </div>
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                             </div>
 
+                            {/* Remember me and Forgot password section */}
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 mt-2">
-    <div className="flex items-center">
-        <input
-            id="remember-me"
-            name="remember-me"
-            type="checkbox"
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-            Remember me
-        </label>
-    </div>
+                                <div className="flex items-center">
+                                    <input
+                                        id="remember-me"
+                                        name="remember-me"
+                                        type="checkbox"
+                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    />
+                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                                        Remember me
+                                    </label>
+                                </div>
 
-    <p      
-        onClick={() => setShowResetModal(true)}
-        className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200 cursor-pointer"
-    >
-        Forgot password?
-    </p>
-</div>
+                                {/* Forgot password is kept as a p tag with onClick */}
+                                <p
+                                    onClick={() => setShowResetModal(true)}
+                                    className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200 cursor-pointer"
+                                >
+                                    Forgot password?
+                                </p>
+                            </div>
 
                             <button
                                 type="submit"
@@ -323,16 +326,14 @@ function Login() {
                             </button>
                         </div>
                         <p className="text-sm text-gray-600 mb-6">Enter your email address and we'll send you a link to reset your password.</p>
-                        <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Mail className="h-5 w-5 text-gray-400" />
-                            </div>
+                        <div className="relative"> {/* Removed Mail icon from here too */}
                             <input
                                 type="email"
                                 value={resetEmail}
                                 onChange={(e) => setResetEmail(e.target.value)}
                                 placeholder="your@example.com"
-                                className="pl-10 w-full px-4 py-3 border border-gray-300 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-200 text-base placeholder-gray-400"
+                                // Removed pl-10 here as well
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl mb-6 focus:outline-none focus:ring-2 focus:ring-blue-200 text-base placeholder-gray-400"
                                 autoFocus
                             />
                         </div>
