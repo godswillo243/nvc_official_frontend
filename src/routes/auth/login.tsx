@@ -214,7 +214,7 @@ function Login() {
                                         disabled={isLockedOut}
                                     />
                                     <p
-                                        type="button"
+                                        
                                         onClick={() => setShowPassword(!showPassword)}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
                                         aria-label={showPassword ? "Hide password" : "Show password"}
@@ -242,8 +242,7 @@ function Login() {
                                     </label>
                                 </div>
 
-                                <p
-                                    type="button"
+                                <p      
                                     onClick={() => setShowResetModal(true)}
                                     className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200"
                                 >
