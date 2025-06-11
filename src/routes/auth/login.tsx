@@ -229,26 +229,26 @@ function Login() {
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                             </div>
 
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    <input
-                                        id="remember-me"
-                                        name="remember-me"
-                                        type="checkbox"
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                    />
-                                    <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                                        Remember me
-                                    </label>
-                                </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2 mt-2">
+    <div className="flex items-center">
+        <input
+            id="remember-me"
+            name="remember-me"
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+        />
+        <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+            Remember me
+        </label>
+    </div>
 
-                                <p      
-                                    onClick={() => setShowResetModal(true)}
-                                    className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200"
-                                >
-                                    Forgot password?
-                                </p>
-                            </div>
+    <p      
+        onClick={() => setShowResetModal(true)}
+        className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-200 rounded-md px-2 py-1 transition-colors duration-200 cursor-pointer"
+    >
+        Forgot password?
+    </p>
+</div>
 
                             <button
                                 type="submit"
