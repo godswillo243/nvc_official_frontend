@@ -181,16 +181,16 @@ function Login() {
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                             </div>
 
-                           {/* Refined Remember me and Forgot password section */}
+                           
                             <div className="flex items-center justify-between w-full mt-1"> {/* Changed mt-2 to mt-1 */}
                                 <div className="flex items-center">
                                     <input
                                         id="remember-me"
                                         name="remember-me"
                                         type="checkbox"
-                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        className="h-2 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
-                                    <label htmlFor="remember-me" className="ml-1 block text-xs text-gray-400"> {/* Changed ml-2 to ml-1 */}
+                                    <label htmlFor="remember-me" className="ml-0.5 block text-xs text-gray-400"> {/* Changed ml-2 to ml-1 */}
                                         Remember me
                                     </label>
                                 </div>
@@ -256,7 +256,7 @@ function Login() {
                     <div className="bg-white rounded-2xl p-8 max-w-sm w-full shadow-2xl transform transition-all duration-300 scale-95 animate-fadeIn">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-2xl font-bold text-gray-800">Reset Password</h3>
-                            <button
+                            <p
                                 onClick={() => {
                                     setShowResetModal(false);
                                     setResetEmail("");
@@ -266,7 +266,7 @@ function Login() {
                                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                            </button>
+                            </p>
                         </div>
                         <p className="text-sm text-gray-600 mb-6">Enter your email address and we'll send you a link to reset your password.</p>
                         <div className="relative">
