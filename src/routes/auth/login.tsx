@@ -175,7 +175,7 @@ function Login() {
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
                                         aria-label={showPassword ? "Show password" : "Hide password"}
                                     >
-                                        {showPassword ? (<EyeOff className="h-5 w-5" />) : (<Eye className="h-5 w-5" />)}
+                                        {showPassword ? (<Eye className="h-5 w-5" />) : (<EyeOff className="h-5 w-5" />)}
                                     </p>
                                 </div>
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
