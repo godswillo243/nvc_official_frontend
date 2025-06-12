@@ -181,8 +181,8 @@ function Login() {
                                 {formErrors.password && <p className="text-sm text-red-600 mt-2 font-medium">{formErrors.password}</p>}
                             </div>
 
-                            {/* Refined Remember me and Forgot password section */}
-                            <div className="flex items-center justify-between w-full mt-2">
+                           {/* Refined Remember me and Forgot password section */}
+                            <div className="flex items-center justify-between w-full mt-1"> {/* Changed mt-2 to mt-1 */}
                                 <div className="flex items-center">
                                     <input
                                         id="remember-me"
@@ -190,7 +190,9 @@ function Login() {
                                         type="checkbox"
                                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                     />
-                                    <label htmlFor="remember-me" className="ml-2 block text-xs text-gray-400">Remember me</label>
+                                    <label htmlFor="remember-me" className="ml-1 block text-xs text-gray-400"> {/* Changed ml-2 to ml-1 */}
+                                        Remember me
+                                    </label>
                                 </div>
                                 <p
                                     onClick={() => setShowResetModal(true)}
@@ -198,7 +200,7 @@ function Login() {
                                 >
                                     Forgot password?
                                 </p>
-                            </div>
+                            </div> 
 
                             <button
                                 type="submit"
